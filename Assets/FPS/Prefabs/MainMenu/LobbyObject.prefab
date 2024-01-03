@@ -469,5 +469,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3f590912ce370747b957d271da4d14f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  name: {fileID: 4617831764453197646}
-  playerCount: {fileID: 6422728086415389911}
+  lobbyNameText: {fileID: 4617831764453197646}
+  playerCountText: {fileID: 6422728086415389911}

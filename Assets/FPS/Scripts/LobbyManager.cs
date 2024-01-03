@@ -54,6 +54,7 @@ public class LobbyManager : Singleton<LobbyManager>
 		}
 	}
 
+	[Button("Refresh List")]
 	private async void GetAndGenerateAllLobbies()
 	{
 		try
@@ -90,10 +91,15 @@ public class LobbyManager : Singleton<LobbyManager>
 
 	private void CreateListOfLobbiesInMenu(QueryResponse lobbies)
 	{
+		for (int i = 0; i < parentMenu.transform.childCount; i++)
+		{
+			Destroy(parentMenu.transform.GetChild(i).gameObject);
+		}
+		
 		foreach(Lobby lobby in lobbies.Results)
 		{
 			LobbyButton lbyBtn = Instantiate(prefab, parentMenu.transform);
-			lbyBtn.InitButton(lobby.Id, lobby.Players.Count + "/" + lobby.MaxPlayers);
+			lbyBtn.InitButton(lobby.Id,lobby.Name, lobby.Players.Count + "/" + lobby.MaxPlayers);
 		}
 	}
 

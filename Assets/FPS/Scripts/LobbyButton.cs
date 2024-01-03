@@ -8,8 +8,8 @@ using UnityEngine.UI;
 [RequireComponent(typeof(Button),typeof(RawImage))]
 public class LobbyButton : MonoBehaviour
 {
-   [SerializeField] private TextMeshProUGUI lobbyName;
-   [SerializeField] private TextMeshProUGUI playerCount;
+   [SerializeField] private TextMeshProUGUI lobbyNameText;
+   [SerializeField] private TextMeshProUGUI playerCountText;
    private string _lobbyId; 
    
    private Button _btn;
@@ -20,11 +20,11 @@ public class LobbyButton : MonoBehaviour
       _btn.onClick.AddListener(Selected);
    }
 
-   public void InitButton(string lobbyId, string player)
+   public void InitButton(string lobbyId, string lobbyName, string player)
    {
       _lobbyId = lobbyId;
-      lobbyName.text = lobbyId;
-      playerCount.text = player;
+      lobbyNameText.text = lobbyName;
+      playerCountText.text = player;
    }
 
    private void Selected()
