@@ -4,11 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NaughtyAttributes;
+using TMPro;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
+using Unity.Services.Matchmaker;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
@@ -17,10 +20,13 @@ public class LobbyManager : Singleton<LobbyManager>
 	[SerializeField] private Button btn;
 	[SerializeField] private LobbyButton prefab;
 	[SerializeField] private GameObject parentMenu;
-	[SerializeField] private float heartBeatFrequency;
-
+	[SerializeField] private float heartBeatFrequency = 15f;
+	
 	private string _playerName;
-
+	private Gamemodes _gamemode = 0;
+	private Lobby _lobby;
+	
+	public UnityEvent lobbyCreated;
 
 	public string PlayerName
 	{
@@ -28,12 +34,14 @@ public class LobbyManager : Singleton<LobbyManager>
 		set => _playerName = value;
 	}
 
-	private void Start()
+	public Lobby Lobby => _lobby;
+
+	public void ChangeGamemode(Int32 dropdown)
 	{
-		Init();
+		_gamemode = (Gamemodes)dropdown;
 	}
 
-	private async void Init()
+	private async void Start()
 	{
 		await UnityServices.InitializeAsync();
 		await AuthenticationService.Instance.SignInAnonymouslyAsync();
@@ -123,35 +131,41 @@ public class LobbyManager : Singleton<LobbyManager>
 	}
 
 	[Button("CreateLobby")]
-	private async void CreateLobby()
+	public async void CreateLobby()
 	{
-		string lobbyName = "new lobby";
+		string lobbyName = _playerName + "'s Lobby";
 		int maxPlayers = 4;
 		CreateLobbyOptions options = new CreateLobbyOptions();
 		options.IsPrivate = false;
 		options.Player = GetPlayer();
+		options.Data = new Dictionary<string, DataObject>
+		{
+			{"Gamemode", new DataObject(DataObject.VisibilityOptions.Public, _gamemode.ToString())}
+		};
 
 		try
 		{
-			Lobby lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxPlayers, options);
-			StartCoroutine(LobbyHeartBeat(lobby));
-
+			_lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxPlayers, options);
+			StartCoroutine(LobbyHeartBeat());
+			lobbyCreated.Invoke();
 		}
 		catch(Exception e)
 		{
 			Console.WriteLine(e);
 			throw;
 		}
+		
+		
 	}
 
-	private IEnumerator LobbyHeartBeat(Lobby lobby)
+	private IEnumerator LobbyHeartBeat()
 	{
-		if (lobby != null)
+		while (_lobby != null)
 		{
-			LobbyService.Instance.SendHeartbeatPingAsync(lobby.Id);
+			LobbyService.Instance.SendHeartbeatPingAsync(_lobby.Id);
+			
+			yield return new WaitForSeconds(heartBeatFrequency);
 		}
-		
-		yield return new WaitForSeconds(heartBeatFrequency);
 	}
 
 	private Player GetPlayer()
