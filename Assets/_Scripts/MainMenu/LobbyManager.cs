@@ -125,6 +125,9 @@ public class LobbyManager : Singleton<LobbyManager>
 				_lobby = await LobbyService.Instance.JoinLobbyByIdAsync(joinCode, joinLobbyByIdOptions);
 				lobbyJoined.Invoke();
 			}
+			
+			SubToEvents();
+			
 		}
 		catch(LobbyServiceException e)
 		{
@@ -202,27 +205,7 @@ public class LobbyManager : Singleton<LobbyManager>
 				_IsOwnerOfLobbyQuoi = true;
 				StartCoroutine(LobbyHeartBeat());
 
-				try
-				{
-					m_LobbyEvents = await Lobbies.Instance.SubscribeToLobbyEventsAsync(_lobby.Id, callbacks);
-				}
-				catch(LobbyServiceException ex)
-				{
-					switch(ex.Reason)
-					{
-						case LobbyExceptionReason.AlreadySubscribedToLobby:
-							Debug.LogWarning($"Already subscribed to lobby[{LobbyManager.instance.Lobby.Id}]. We did not need to try and subscribe again. Exception Message: {ex.Message}");
-							break;
-						case LobbyExceptionReason.SubscriptionToLobbyLostWhileBusy:
-							Debug.LogError($"Subscription to lobby events was lost while it was busy trying to subscribe. Exception Message: {ex.Message}");
-							throw;
-						case LobbyExceptionReason.LobbyEventServiceConnectionError:
-							Debug.LogError($"Failed to connect to lobby events. Exception Message: {ex.Message}");
-							throw;
-						default:
-							throw;
-					}
-				}
+				SubToEvents();
 
 				lobbyCreated.Invoke();
 			}
@@ -231,6 +214,31 @@ public class LobbyManager : Singleton<LobbyManager>
 		{
 			Console.WriteLine(e);
 			throw;
+		}
+	}
+
+	private async void SubToEvents()
+	{
+		try
+		{
+			m_LobbyEvents = await Lobbies.Instance.SubscribeToLobbyEventsAsync(_lobby.Id, callbacks);
+		}
+		catch(LobbyServiceException ex)
+		{
+			switch(ex.Reason)
+			{
+				case LobbyExceptionReason.AlreadySubscribedToLobby:
+					Debug.LogWarning($"Already subscribed to lobby[{LobbyManager.instance.Lobby.Id}]. We did not need to try and subscribe again. Exception Message: {ex.Message}");
+					break;
+				case LobbyExceptionReason.SubscriptionToLobbyLostWhileBusy:
+					Debug.LogError($"Subscription to lobby events was lost while it was busy trying to subscribe. Exception Message: {ex.Message}");
+					throw;
+				case LobbyExceptionReason.LobbyEventServiceConnectionError:
+					Debug.LogError($"Failed to connect to lobby events. Exception Message: {ex.Message}");
+					throw;
+				default:
+					throw;
+			}
 		}
 	}
 

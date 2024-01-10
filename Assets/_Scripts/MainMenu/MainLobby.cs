@@ -10,7 +10,7 @@ public class MainLobby : NetworkBehaviour
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private GameObject parentUIObject;
     [SerializeField] private GameObject lobbyUI;
-    [FormerlySerializedAs("UIToDeactivate")] [SerializeField] private GameObject[] uiToDeactivate;
+    [SerializeField] private GameObject[] uiToDeactivate;
     [SerializeField] private TMP_Text lobbyName;
 
     
