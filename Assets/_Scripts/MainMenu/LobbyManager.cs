@@ -19,20 +19,20 @@ public class LobbyManager : Singleton<LobbyManager>
 	[SerializeField] private LobbyButton prefab;
 	[SerializeField] private GameObject parentMenu;
 	[SerializeField] private float heartBeatFrequency = 15f;
-	
+
 	private string _playerName;
 	private Gamemodes _gamemode = 0;
 	private Lobby _lobby;
-	private bool _IsOwnerOfLobbyQuoi;
+	private bool _IsOwnerOfLobbyQuoi = false;
 	private ILobbyEvents m_LobbyEvents;
 	private LobbyEventCallbacks callbacks = new LobbyEventCallbacks();
-	    
-	    
+
+
 	public UnityEvent lobbyCreated;
 	public UnityEvent lobbyJoined;
 	public UnityEvent kickedEvent;
 	public UnityEvent refreshUI;
-	
+
 	public string PlayerName
 	{
 		get => _playerName;
@@ -48,7 +48,7 @@ public class LobbyManager : Singleton<LobbyManager>
 
 	private void OnDestroy()
 	{
-		if (_lobby != null)
+		if(_lobby != null)
 		{
 			LeaveLobby();
 		}
@@ -63,16 +63,18 @@ public class LobbyManager : Singleton<LobbyManager>
 	{
 		var options = new InitializationOptions();
 		options.SetProfile(_playerName);
-		
-		if (UnityServices.State != ServicesInitializationState.Initialized) await UnityServices.InitializeAsync(options);
-		if (!AuthenticationService.Instance.IsSignedIn) await AuthenticationService.Instance.SignInAnonymouslyAsync();
-		
+
+		if(UnityServices.State != ServicesInitializationState.Initialized)
+			await UnityServices.InitializeAsync(options);
+		if(!AuthenticationService.Instance.IsSignedIn)
+			await AuthenticationService.Instance.SignInAnonymouslyAsync();
+
 		Debug.Log(AuthenticationService.Instance.PlayerId);
-		
+
 		callbacks.LobbyChanged += OnLobbyChanged;
 		callbacks.KickedFromLobby += OnKickedFromLobby;
 		callbacks.LobbyEventConnectionStateChanged += OnLobbyEventConnectionStateChanged;
-		
+
 		GetAndGenerateAllLobbies();
 	}
 
@@ -92,7 +94,7 @@ public class LobbyManager : Singleton<LobbyManager>
 		lobbyChanges.ApplyToLobby(_lobby);
 		refreshUI.Invoke();
 	}
-	
+
 	public void ButtonSelected(LobbyButton lobbyButton)
 	{
 		btn.onClick.RemoveAllListeners();
@@ -120,7 +122,7 @@ public class LobbyManager : Singleton<LobbyManager>
 				{
 					Player = GetPlayer()
 				};
-				_lobby = await LobbyService.Instance.JoinLobbyByIdAsync(joinCode,joinLobbyByIdOptions);
+				_lobby = await LobbyService.Instance.JoinLobbyByIdAsync(joinCode, joinLobbyByIdOptions);
 				lobbyJoined.Invoke();
 			}
 		}
@@ -167,15 +169,15 @@ public class LobbyManager : Singleton<LobbyManager>
 
 	private void CreateListOfLobbiesInMenu(QueryResponse lobbies)
 	{
-		for (int i = 0; i < parentMenu.transform.childCount; i++)
+		for(int i = 0; i < parentMenu.transform.childCount; i++)
 		{
 			Destroy(parentMenu.transform.GetChild(i).gameObject);
 		}
-		
+
 		foreach(Lobby lobby in lobbies.Results)
 		{
 			LobbyButton lbyBtn = Instantiate(prefab, parentMenu.transform);
-			lbyBtn.InitButton(lobby.Id,lobby.Name, lobby.Players.Count + "/" + lobby.MaxPlayers);
+			lbyBtn.InitButton(lobby.Id, lobby.Name, lobby.Players.Count + "/" + lobby.MaxPlayers);
 		}
 	}
 
@@ -194,24 +196,34 @@ public class LobbyManager : Singleton<LobbyManager>
 
 		try
 		{
-			if (_lobby == null)
+			if(_lobby == null)
 			{
 				_lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxPlayers, options);
+				_IsOwnerOfLobbyQuoi = true;
 				StartCoroutine(LobbyHeartBeat());
-				
-				try {
+
+				try
+				{
 					m_LobbyEvents = await Lobbies.Instance.SubscribeToLobbyEventsAsync(_lobby.Id, callbacks);
 				}
-				catch (LobbyServiceException ex)
+				catch(LobbyServiceException ex)
 				{
-					switch (ex.Reason) {
-						case LobbyExceptionReason.AlreadySubscribedToLobby: Debug.LogWarning($"Already subscribed to lobby[{LobbyManager.instance.Lobby.Id}]. We did not need to try and subscribe again. Exception Message: {ex.Message}"); break;
-						case LobbyExceptionReason.SubscriptionToLobbyLostWhileBusy: Debug.LogError($"Subscription to lobby events was lost while it was busy trying to subscribe. Exception Message: {ex.Message}"); throw;
-						case LobbyExceptionReason.LobbyEventServiceConnectionError: Debug.LogError($"Failed to connect to lobby events. Exception Message: {ex.Message}"); throw;
-						default: throw;
+					switch(ex.Reason)
+					{
+						case LobbyExceptionReason.AlreadySubscribedToLobby:
+							Debug.LogWarning($"Already subscribed to lobby[{LobbyManager.instance.Lobby.Id}]. We did not need to try and subscribe again. Exception Message: {ex.Message}");
+							break;
+						case LobbyExceptionReason.SubscriptionToLobbyLostWhileBusy:
+							Debug.LogError($"Subscription to lobby events was lost while it was busy trying to subscribe. Exception Message: {ex.Message}");
+							throw;
+						case LobbyExceptionReason.LobbyEventServiceConnectionError:
+							Debug.LogError($"Failed to connect to lobby events. Exception Message: {ex.Message}");
+							throw;
+						default:
+							throw;
 					}
 				}
-				
+
 				lobbyCreated.Invoke();
 			}
 		}
@@ -224,34 +236,34 @@ public class LobbyManager : Singleton<LobbyManager>
 
 	public async void LeaveLobby()
 	{
-		if (_IsOwnerOfLobbyQuoi)
+		if(_IsOwnerOfLobbyQuoi)
 		{
-			foreach (var player in _lobby.Players)
+			foreach(var player in _lobby.Players)
 			{
-				if (player.Id != AuthenticationService.Instance.PlayerId)
+				if(player.Id != AuthenticationService.Instance.PlayerId)
 				{
 					await LobbyService.Instance.RemovePlayerAsync(_lobby.Id, player.Id);
 				}
 			}
-			
+
 			await LobbyService.Instance.DeleteLobbyAsync(_lobby.Id);
 		}
 		else
 		{
 			await LobbyService.Instance.RemovePlayerAsync(_lobby.Id, AuthenticationService.Instance.PlayerId);
 		}
-		
+
 		//Call Kicked Event for host and kickes clients
-		
+
 		_lobby = null;
 	}
 
 	private IEnumerator LobbyHeartBeat()
 	{
-		while (_lobby != null)
+		while(_lobby != null)
 		{
 			LobbyService.Instance.SendHeartbeatPingAsync(_lobby.Id);
-			
+
 			yield return new WaitForSeconds(heartBeatFrequency);
 		}
 	}
