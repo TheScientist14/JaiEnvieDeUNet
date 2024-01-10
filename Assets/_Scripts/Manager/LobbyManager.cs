@@ -35,7 +35,7 @@ public class LobbyManager : Singleton<LobbyManager>
 	private ILobbyEvents _lobbyEvents;
 	private MultiplayEventCallbacks _multiplayEventCallbacks = new MultiplayEventCallbacks();
 	private LobbyEventCallbacks _lobbyEventCallbacks = new LobbyEventCallbacks();
-	
+
 	public UnityEvent lobbyCreated;
 	public UnityEvent lobbyJoined;
 	public UnityEvent kickedEvent;
@@ -82,7 +82,7 @@ public class LobbyManager : Singleton<LobbyManager>
 		_lobbyEventCallbacks.LobbyChanged += OnLobbyChanged;
 		_lobbyEventCallbacks.KickedFromLobby += OnKickedFromLobby;
 		_lobbyEventCallbacks.LobbyEventConnectionStateChanged += OnLobbyEventConnectionStateChanged;
-		
+
 		init.Invoke();
 	}
 
@@ -101,11 +101,11 @@ public class LobbyManager : Singleton<LobbyManager>
 	{
 		lobbyChanges.ApplyToLobby(_lobby);
 
-		if (_lobby.Data.ContainsKey(k_ServerIp))
+		if(_lobby.Data.ContainsKey(k_ServerIp))
 		{
-			string ip = _lobby.Data[k_ServerIp].Value ;
+			string ip = _lobby.Data[k_ServerIp].Value;
 			ushort port = ushort.Parse(_lobby.Data[k_ServerPort].Value);
-			
+
 			await LeaveLobby();
 
 			// init NGO client side
@@ -248,18 +248,18 @@ public class LobbyManager : Singleton<LobbyManager>
 		UpdateLobbyOptions updateOptions = new UpdateLobbyOptions();
 
 		updateOptions.IsLocked = true;
-		
+
 		Debug.Log("UpdatingLobby");
 		await LobbyService.Instance.UpdateLobbyAsync(Lobby.Id, updateOptions);
 		Debug.Log("Updated lobby");
-		
+
 		WaitForTicket(ticketResponse.Id);
 	}
 
 	private async void WaitForTicket(string prmTicketId)
 	{
 		Debug.Log("Wait");
-		
+
 		MultiplayAssignment assignment = null;
 		bool gotAssignment = false;
 		do
@@ -305,7 +305,7 @@ public class LobbyManager : Singleton<LobbyManager>
 		} while(!gotAssignment);
 
 		UpdateLobbyOptions updateOptions = new UpdateLobbyOptions();
-		
+
 		updateOptions.Data = new Dictionary<string, DataObject>()
 		{
 			{
@@ -315,12 +315,12 @@ public class LobbyManager : Singleton<LobbyManager>
 				k_ServerPort, new DataObject(DataObject.VisibilityOptions.Member, assignment.Port.ToString())
 			}
 		};
-		
+
 		await LobbyService.Instance.UpdateLobbyAsync(Lobby.Id, updateOptions);
-		
-		
+
+
 	}
-    
+
 	private async void SubToLobbyEvents()
 	{
 		try
@@ -352,7 +352,7 @@ public class LobbyManager : Singleton<LobbyManager>
 		{
 			await _lobbyEvents.UnsubscribeAsync();
 		}
-		catch (Exception e)
+		catch(Exception e)
 		{
 			Console.WriteLine(e);
 			throw;
@@ -362,14 +362,18 @@ public class LobbyManager : Singleton<LobbyManager>
 	public async Task LeaveLobby()
 	{
 		await UnSubToLobbyEvents();
-		
+
 		if(_IsOwnerOfLobby)
 		{
 			foreach(var player in _lobby.Players)
 			{
 				if(player.Id != AuthenticationService.Instance.PlayerId)
 				{
-					await LobbyService.Instance.RemovePlayerAsync(_lobby.Id, player.Id);
+					try
+					{
+						await LobbyService.Instance.RemovePlayerAsync(_lobby.Id, player.Id);
+					}
+					catch { }
 				}
 			}
 
@@ -377,16 +381,23 @@ public class LobbyManager : Singleton<LobbyManager>
 			{
 				await LobbyService.Instance.DeleteLobbyAsync(_lobby.Id);
 			}
-			catch (Exception e)
+			catch(Exception e)
 			{
 				Console.WriteLine(e);
 				throw;
 			}
-			
+
 		}
 		else
 		{
-			await LobbyService.Instance.RemovePlayerAsync(_lobby.Id, AuthenticationService.Instance.PlayerId);
+			try
+			{
+				await LobbyService.Instance.RemovePlayerAsync(_lobby.Id, AuthenticationService.Instance.PlayerId);
+			}
+			catch
+			{
+				Debug.LogWarning("Could not remove player from lobby");
+			}
 		}
 
 		//Calls Kicked Event for host and kickes clients
