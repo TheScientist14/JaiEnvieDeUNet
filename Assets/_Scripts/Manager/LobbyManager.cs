@@ -3,13 +3,20 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NaughtyAttributes;
+using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
+using Unity.Services.Matchmaker;
+using Unity.Services.Matchmaker.Models;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Player = Unity.Services.Lobbies.Models.Player;
+using PlayerM = Unity.Services.Matchmaker.Models.Player;
 
 public class LobbyManager : Singleton<LobbyManager>
 {
@@ -18,10 +25,11 @@ public class LobbyManager : Singleton<LobbyManager>
 	private string _playerName;
 	private Gamemodes _gamemode = 0;
 	private Lobby _lobby;
-	private bool _IsOwnerOfLobbyQuoi = false;
+	private bool _IsOwnerOfLobby = false;
 	private ILobbyEvents m_LobbyEvents;
 	private LobbyEventCallbacks callbacks = new LobbyEventCallbacks();
 
+	private static string ticketIdKey = "ticketId";
 
 	public UnityEvent lobbyCreated;
 	public UnityEvent lobbyJoined;
@@ -86,6 +94,13 @@ public class LobbyManager : Singleton<LobbyManager>
 	private void OnLobbyChanged(ILobbyChanges lobbyChanges)
 	{
 		lobbyChanges.ApplyToLobby(_lobby);
+
+		if(_lobby.IsLocked)
+		{
+			WaitForTicket();
+			return;
+		}
+
 		refreshUI.Invoke();
 	}
 
@@ -111,17 +126,17 @@ public class LobbyManager : Singleton<LobbyManager>
 				_lobby = await LobbyService.Instance.JoinLobbyByIdAsync(joinCode, joinLobbyByIdOptions);
 				lobbyJoined.Invoke();
 			}
-			
+
 			SubToEvents();
-			
+
 		}
 		catch(LobbyServiceException e)
 		{
 			Debug.Log(e);
 		}
 	}
-	
-	
+
+
 	public async Task<QueryResponse> GetAllLobbies()
 	{
 		QueryResponse lobbies = null;
@@ -147,17 +162,17 @@ public class LobbyManager : Singleton<LobbyManager>
 					field: QueryOrder.FieldOptions.Created)
 			};
 
-			 lobbies = await Lobbies.Instance.QueryLobbiesAsync(options);
+			lobbies = await Lobbies.Instance.QueryLobbiesAsync(options);
 		}
 		catch(LobbyServiceException e)
 		{
 			Debug.Log(e);
 		}
-		
+
 		return lobbies;
 	}
 
-	
+
 
 	[Button("CreateLobby")]
 	public async void CreateLobby()
@@ -177,7 +192,7 @@ public class LobbyManager : Singleton<LobbyManager>
 			if(_lobby == null)
 			{
 				_lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxPlayers, options);
-				_IsOwnerOfLobbyQuoi = true;
+				_IsOwnerOfLobby = true;
 				StartCoroutine(LobbyHeartBeat());
 
 				SubToEvents();
@@ -190,6 +205,98 @@ public class LobbyManager : Singleton<LobbyManager>
 			Console.WriteLine(e);
 			throw;
 		}
+	}
+
+	public async void StartGame()
+	{
+		if(!_IsOwnerOfLobby)
+			return;
+
+		List<PlayerM> players = new List<PlayerM>();
+		foreach(Player player in _lobby.Players)
+			players.Add(new PlayerM(player.Id, player.Data));
+
+		// Set options for matchmaking
+		var options = new CreateTicketOptions(
+		  "Default", // The name of the queue defined in the previous step, 
+		  new Dictionary<string, object>());
+
+		// Create ticket
+		var ticketResponse = await MatchmakerService.Instance.CreateTicketAsync(players, options);
+
+		// Print the created ticket id
+		Debug.Log(ticketResponse.Id);
+
+
+		UpdateLobbyOptions updateOptions = new UpdateLobbyOptions
+		{
+			IsLocked = true,
+			Data = { { ticketIdKey, new DataObject(DataObject.VisibilityOptions.Member, ticketResponse.Id) } }
+		};
+		await LobbyService.Instance.UpdateLobbyAsync(Lobby.Id, updateOptions);
+	}
+
+	private async void WaitForTicket()
+	{
+		if(!Lobby.Data.ContainsKey(ticketIdKey))
+		{
+			Debug.LogWarning("No ticket id in lobby data");
+			return;
+		}
+
+		string ticketId = Lobby.Data[ticketIdKey].Value;
+
+		MultiplayAssignment assignment = null;
+		bool gotAssignment = false;
+		do
+		{
+			await Task.Delay(TimeSpan.FromSeconds(1f));
+
+			// Poll ticket
+			TicketStatusResponse ticketStatus = await MatchmakerService.Instance.GetTicketAsync(ticketId);
+
+			if(ticketStatus == null)
+				continue;
+
+			//Convert to platform assignment data (IOneOf conversion)
+			if(ticketStatus.Value is MultiplayAssignment)
+			{
+				assignment = ticketStatus.Value as MultiplayAssignment;
+			}
+
+			if(assignment == null)
+				continue;
+
+			switch(assignment.Status)
+			{
+				case MultiplayAssignment.StatusOptions.Found:
+					gotAssignment = true;
+					break;
+				case MultiplayAssignment.StatusOptions.InProgress:
+					//...
+					break;
+				case MultiplayAssignment.StatusOptions.Failed:
+					gotAssignment = true;
+					Debug.LogError("Failed to get ticket status. Error: " + assignment.Message);
+					break;
+				case MultiplayAssignment.StatusOptions.Timeout:
+					gotAssignment = true;
+					Debug.LogError("Failed to get ticket status. Ticket timed out.");
+					break;
+				default:
+					throw new InvalidOperationException();
+			}
+
+		} while(!gotAssignment);
+
+		LeaveLobby();
+
+		// init NGO client side
+
+		NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(assignment.Ip, (ushort)assignment.Port);
+		NetworkManager.Singleton.StartClient();
+
+		SceneManager.SetActiveScene(SceneManager.GetSceneByName("PVE"));
 	}
 
 	private async void SubToEvents()
@@ -219,7 +326,7 @@ public class LobbyManager : Singleton<LobbyManager>
 
 	public async void LeaveLobby()
 	{
-		if(_IsOwnerOfLobbyQuoi)
+		if(_IsOwnerOfLobby)
 		{
 			foreach(var player in _lobby.Players)
 			{
