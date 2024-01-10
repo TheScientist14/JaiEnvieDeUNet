@@ -17,6 +17,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using static GameConstants;
 using Player = Unity.Services.Lobbies.Models.Player;
 using PlayerM = Unity.Services.Matchmaker.Models.Player;
 using DataObject = Unity.Services.Lobbies.Models.DataObject;
@@ -34,9 +35,7 @@ public class LobbyManager : Singleton<LobbyManager>
 	private ILobbyEvents _lobbyEvents;
 	private MultiplayEventCallbacks _multiplayEventCallbacks = new MultiplayEventCallbacks();
 	private LobbyEventCallbacks _lobbyEventCallbacks = new LobbyEventCallbacks();
-
-	private static string ticketIdKey = "ticketId";
-
+	
 	public UnityEvent lobbyCreated;
 	public UnityEvent lobbyJoined;
 	public UnityEvent kickedEvent;
@@ -55,11 +54,11 @@ public class LobbyManager : Singleton<LobbyManager>
 	}
 
 
-	private void OnDestroy()
+	private async void OnDestroy()
 	{
 		if(_lobby != null)
 		{
-			LeaveLobby();
+			await LeaveLobby();
 		}
 	}
 
@@ -98,14 +97,23 @@ public class LobbyManager : Singleton<LobbyManager>
 		_lobby = null;
 		kickedEvent.Invoke();
 	}
-	private void OnLobbyChanged(ILobbyChanges lobbyChanges)
+	private async void OnLobbyChanged(ILobbyChanges lobbyChanges)
 	{
 		lobbyChanges.ApplyToLobby(_lobby);
 
-		if(_lobby.IsLocked)
+		if (_lobby.Data.ContainsKey(k_ServerIp))
 		{
-			WaitForTicket();
-			return;
+			string ip = _lobby.Data[k_ServerIp].Value ;
+			ushort port = ushort.Parse(_lobby.Data[k_ServerPort].Value);
+			
+			await LeaveLobby();
+
+			// init NGO client side
+			NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(ip, port);
+
+			Debug.Log("Connected to " + ip + ":" + port);
+
+			SceneManager.LoadScene("PVE");
 		}
 
 		refreshUI.Invoke();
@@ -240,28 +248,18 @@ public class LobbyManager : Singleton<LobbyManager>
 		UpdateLobbyOptions updateOptions = new UpdateLobbyOptions();
 
 		updateOptions.IsLocked = true;
-		updateOptions.Data = new Dictionary<string, DataObject>()
-		{
-			{
-				ticketIdKey, new DataObject(DataObject.VisibilityOptions.Member, ticketResponse.Id)
-			}
-		};
+		
 		Debug.Log("UpdatingLobby");
 		await LobbyService.Instance.UpdateLobbyAsync(Lobby.Id, updateOptions);
 		Debug.Log("Updated lobby");
+		
+		WaitForTicket(ticketResponse.Id);
 	}
 
-	private async void WaitForTicket()
+	private async void WaitForTicket(string prmTicketId)
 	{
 		Debug.Log("Wait");
-		if(!Lobby.Data.ContainsKey(ticketIdKey))
-		{
-			Debug.LogWarning("No ticket id in lobby data");
-			return;
-		}
-
-		string ticketId = Lobby.Data[ticketIdKey].Value;
-
+		
 		MultiplayAssignment assignment = null;
 		bool gotAssignment = false;
 		do
@@ -270,7 +268,7 @@ public class LobbyManager : Singleton<LobbyManager>
 			await Task.Delay(TimeSpan.FromSeconds(1.1f));
 
 			// Poll ticket
-			TicketStatusResponse ticketStatus = await MatchmakerService.Instance.GetTicketAsync(ticketId);
+			TicketStatusResponse ticketStatus = await MatchmakerService.Instance.GetTicketAsync(prmTicketId);
 
 			if(ticketStatus == null)
 				continue;
@@ -306,16 +304,23 @@ public class LobbyManager : Singleton<LobbyManager>
 
 		} while(!gotAssignment);
 
-		await LeaveLobby();
-
-		// init NGO client side
-		NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(assignment.Ip, (ushort)assignment.Port, "0.0.0.0");
-
-		Debug.Log("Connected to " + assignment.Ip + ":" + assignment.Port);
-
-		SceneManager.LoadScene("PVE");
+		UpdateLobbyOptions updateOptions = new UpdateLobbyOptions();
+		
+		updateOptions.Data = new Dictionary<string, DataObject>()
+		{
+			{
+				k_ServerIp, new DataObject(DataObject.VisibilityOptions.Member, assignment.Ip)
+			},
+			{
+				k_ServerPort, new DataObject(DataObject.VisibilityOptions.Member, assignment.Port.ToString())
+			}
+		};
+		
+		await LobbyService.Instance.UpdateLobbyAsync(Lobby.Id, updateOptions);
+		
+		
 	}
-
+    
 	private async void SubToLobbyEvents()
 	{
 		try
