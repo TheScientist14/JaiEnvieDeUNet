@@ -114,6 +114,8 @@ public class LobbyManager : Singleton<LobbyManager>
 			Debug.Log("Connected to " + ip + ":" + port);
 
 			SceneManager.LoadScene("PVE");
+			
+			return;
 		}
 
 		refreshUI.Invoke();
