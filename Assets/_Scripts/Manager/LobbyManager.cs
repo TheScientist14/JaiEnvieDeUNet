@@ -17,6 +17,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Player = Unity.Services.Lobbies.Models.Player;
 using PlayerM = Unity.Services.Matchmaker.Models.Player;
+using DataObject = Unity.Services.Lobbies.Models.DataObject;
 
 public class LobbyManager : Singleton<LobbyManager>
 {
@@ -214,11 +215,11 @@ public class LobbyManager : Singleton<LobbyManager>
 
 		List<PlayerM> players = new List<PlayerM>();
 		foreach(Player player in _lobby.Players)
-			players.Add(new PlayerM(player.Id, player.Data));
+			players.Add(new PlayerM(player.Id));
 
 		// Set options for matchmaking
 		var options = new CreateTicketOptions(
-		  "Default", // The name of the queue defined in the previous step, 
+		  "DefaultQ", // The name of the queue defined in the previous step, 
 		  new Dictionary<string, object>());
 
 		// Create ticket
@@ -228,10 +229,14 @@ public class LobbyManager : Singleton<LobbyManager>
 		Debug.Log(ticketResponse.Id);
 
 
-		UpdateLobbyOptions updateOptions = new UpdateLobbyOptions
+		UpdateLobbyOptions updateOptions = new UpdateLobbyOptions();
+
+		updateOptions.IsLocked = true;
+		updateOptions.Data = new Dictionary<string, DataObject>()
 		{
-			IsLocked = true,
-			Data = { { ticketIdKey, new DataObject(DataObject.VisibilityOptions.Member, ticketResponse.Id) } }
+			{
+				ticketIdKey, new DataObject(DataObject.VisibilityOptions.Member, ticketResponse.Id)
+			}
 		};
 		await LobbyService.Instance.UpdateLobbyAsync(Lobby.Id, updateOptions);
 	}
@@ -250,7 +255,7 @@ public class LobbyManager : Singleton<LobbyManager>
 		bool gotAssignment = false;
 		do
 		{
-			await Task.Delay(TimeSpan.FromSeconds(1f));
+			await Task.Delay(TimeSpan.FromSeconds(5f));
 
 			// Poll ticket
 			TicketStatusResponse ticketStatus = await MatchmakerService.Instance.GetTicketAsync(ticketId);
