@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,6 +11,7 @@ public class LobbyButton : MonoBehaviour
 {
    [SerializeField] private TextMeshProUGUI lobbyNameText;
    [SerializeField] private TextMeshProUGUI playerCountText;
+   private LobbyList _lobbyList;
    private string _lobbyId; 
    
    private Button _btn;
@@ -20,16 +22,17 @@ public class LobbyButton : MonoBehaviour
       _btn.onClick.AddListener(Selected);
    }
 
-   public void InitButton(string lobbyId, string lobbyName, string player)
+   public void InitButton(string lobbyId, string lobbyName, string player, LobbyList lobbyList)
    {
       _lobbyId = lobbyId;
       lobbyNameText.text = lobbyName;
       playerCountText.text = player;
+      _lobbyList = lobbyList;
    }
 
    private void Selected()
    {
-      LobbyManager.instance.ButtonSelected(this);
+      _lobbyList.ButtonSelected(this);
    }
 
    public string GetLobbyId()

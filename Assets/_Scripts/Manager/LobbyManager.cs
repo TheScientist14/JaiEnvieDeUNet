@@ -1,23 +1,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using NaughtyAttributes;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
 public class LobbyManager : Singleton<LobbyManager>
 {
-	[SerializeField] private Button btn;
-	[SerializeField] private LobbyButton prefab;
-	[SerializeField] private GameObject parentMenu;
 	[SerializeField] private float heartBeatFrequency = 15f;
 
 	private string _playerName;
@@ -32,6 +27,7 @@ public class LobbyManager : Singleton<LobbyManager>
 	public UnityEvent lobbyJoined;
 	public UnityEvent kickedEvent;
 	public UnityEvent refreshUI;
+	public UnityEvent init;
 
 	public string PlayerName
 	{
@@ -42,7 +38,6 @@ public class LobbyManager : Singleton<LobbyManager>
 	public Lobby Lobby
 	{
 		get => _lobby;
-		set => _lobby = value;
 	}
 
 
@@ -74,8 +69,7 @@ public class LobbyManager : Singleton<LobbyManager>
 		callbacks.LobbyChanged += OnLobbyChanged;
 		callbacks.KickedFromLobby += OnKickedFromLobby;
 		callbacks.LobbyEventConnectionStateChanged += OnLobbyEventConnectionStateChanged;
-
-		GetAndGenerateAllLobbies();
+		init.Invoke();
 	}
 
 	private void OnLobbyEventConnectionStateChanged(LobbyEventConnectionState obj)
@@ -95,15 +89,7 @@ public class LobbyManager : Singleton<LobbyManager>
 		refreshUI.Invoke();
 	}
 
-	public void ButtonSelected(LobbyButton lobbyButton)
-	{
-		btn.onClick.RemoveAllListeners();
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-		btn.onClick.AddListener(() => JoinLobby(lobbyButton.GetLobbyId()));
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-	}
-
-	private async Task JoinLobby(String joinCode, bool isLobbyCode = false)
+	public async Task JoinLobby(String joinCode, bool isLobbyCode = false)
 	{
 		try
 		{
@@ -134,10 +120,11 @@ public class LobbyManager : Singleton<LobbyManager>
 			Debug.Log(e);
 		}
 	}
-
-	[Button("Refresh List")]
-	private async void GetAndGenerateAllLobbies()
+	
+	
+	public async Task<QueryResponse> GetAllLobbies()
 	{
+		QueryResponse lobbies = null;
 		try
 		{
 			QueryLobbiesOptions options = new QueryLobbiesOptions();
@@ -160,29 +147,17 @@ public class LobbyManager : Singleton<LobbyManager>
 					field: QueryOrder.FieldOptions.Created)
 			};
 
-			QueryResponse lobbies = await Lobbies.Instance.QueryLobbiesAsync(options);
-
-			CreateListOfLobbiesInMenu(lobbies);
+			 lobbies = await Lobbies.Instance.QueryLobbiesAsync(options);
 		}
 		catch(LobbyServiceException e)
 		{
 			Debug.Log(e);
 		}
+		
+		return lobbies;
 	}
 
-	private void CreateListOfLobbiesInMenu(QueryResponse lobbies)
-	{
-		for(int i = 0; i < parentMenu.transform.childCount; i++)
-		{
-			Destroy(parentMenu.transform.GetChild(i).gameObject);
-		}
-
-		foreach(Lobby lobby in lobbies.Results)
-		{
-			LobbyButton lbyBtn = Instantiate(prefab, parentMenu.transform);
-			lbyBtn.InitButton(lobby.Id, lobby.Name, lobby.Players.Count + "/" + lobby.MaxPlayers);
-		}
-	}
+	
 
 	[Button("CreateLobby")]
 	public async void CreateLobby()
