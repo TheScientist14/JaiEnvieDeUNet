@@ -27,6 +27,7 @@ public class LobbyManager : Singleton<LobbyManager>
 	private Gamemodes _gamemode = 0;
 	private Lobby _lobby;
 	private bool _IsOwnerOfLobby = false;
+	private bool _IsWaitingForTicket = false;
 	private ILobbyEvents m_LobbyEvents;
 	private LobbyEventCallbacks callbacks = new LobbyEventCallbacks();
 
@@ -194,7 +195,7 @@ public class LobbyManager : Singleton<LobbyManager>
 			{
 				_lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxPlayers, options);
 				_IsOwnerOfLobby = true;
-				
+
 				LobbyHeartBeat();
 				SubToEvents();
 
@@ -210,8 +211,10 @@ public class LobbyManager : Singleton<LobbyManager>
 
 	public async void StartGame()
 	{
-		if(!_IsOwnerOfLobby)
+		if(!_IsOwnerOfLobby || _IsWaitingForTicket)
 			return;
+
+		_IsWaitingForTicket = true;
 
 		List<PlayerM> players = new List<PlayerM>();
 		foreach(Player player in _lobby.Players)
@@ -297,11 +300,11 @@ public class LobbyManager : Singleton<LobbyManager>
 		LeaveLobby();
 
 		// init NGO client side
-
 		NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(assignment.Ip, (ushort)assignment.Port);
-		NetworkManager.Singleton.StartClient();
 
-		SceneManager.SetActiveScene(SceneManager.GetSceneByName("PVE"));
+		Debug.Log("Connected to " + assignment.Ip + ":" + assignment.Port);
+
+		SceneManager.LoadScene("PVE");
 	}
 
 	private async void SubToEvents()
