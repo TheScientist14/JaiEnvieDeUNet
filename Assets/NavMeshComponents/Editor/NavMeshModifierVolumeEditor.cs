@@ -31,12 +31,12 @@ namespace UnityEditor.AI
             m_Center = serializedObject.FindProperty("m_Center");
             m_Size = serializedObject.FindProperty("m_Size");
 
-            NavMeshAssetManager.s_NavigationUserCount++;
+            NavMeshVisualizationSettings.showNavigation++;
         }
 
         void OnDisable()
         {
-            NavMeshAssetManager.s_NavigationUserCount--;
+            NavMeshVisualizationSettings.showNavigation--;
         }
 
         Bounds GetBounds()
@@ -88,7 +88,7 @@ namespace UnityEditor.AI
         [DrawGizmo(GizmoType.NotInSelectionHierarchy | GizmoType.Pickable)]
         static void RenderBoxGizmoNotSelected(NavMeshModifierVolume navModifier, GizmoType gizmoType)
         {
-            if (NavMeshAssetManager.s_NavigationUserCount > 0)
+            if (NavMeshVisualizationSettings.showNavigation > 0)
             {
                 var color = navModifier.enabled ? s_HandleColor : s_HandleColorDisabled;
                 var oldColor = Gizmos.color;

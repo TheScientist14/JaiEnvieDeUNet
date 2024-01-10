@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using Unity.Netcode;
+using NaughtyAttributes;
 
 namespace Unity.FPS.Game
 {
@@ -69,6 +71,24 @@ namespace Unity.FPS.Game
 
         [Tooltip("Translation to apply to weapon arm when aiming with this weapon")]
         public Vector3 AimOffset;
+
+        [Header("Hitscan")]
+        [Tooltip("Is Hitscan")]
+        public bool IsHitscan = false;
+        [ShowIf("IsHitscan"), Tooltip("Area of damage. Keep empty if you don't want area damage")]
+        public DamageArea AreaOfDamage;
+        [ShowIf("IsHitscan"), Tooltip("Damage of the projectile")]
+        public float Damage = 40.0f;
+        [ShowIf("IsHitscan"), Tooltip("Layers this projectile can collide with")]
+        public LayerMask HittableLayers = -1;
+        [ShowIf("IsHitscan"), Tooltip("Clip to play on impact")]
+        public AudioClip ImpactSfxClip;
+        [ShowIf("IsHitscan"), Tooltip("VFX prefab to spawn upon impact")]
+        public GameObject ImpactVfx;
+        [ShowIf("IsHitscan"), Tooltip("LifeTime of the VFX before being destroyed")]
+        public float ImpactVfxLifetime = 5f;
+        [ShowIf("IsHitscan"), Tooltip("Offset along the hit normal where the VFX will be spawned")]
+        public float ImpactVfxSpawnOffset = 0.1f;
 
         [Header("Ammo Parameters")]
         [Tooltip("Should the player manually reload")]
@@ -156,6 +176,8 @@ namespace Unity.FPS.Game
         public int GetCurrentAmmo() => Mathf.FloorToInt(m_CurrentAmmo);
 
         AudioSource m_ShootAudioSource;
+
+        const QueryTriggerInteraction k_TriggerInteraction = QueryTriggerInteraction.Collide;
 
         public bool IsReloading { get; private set; }
 
@@ -447,9 +469,20 @@ namespace Unity.FPS.Game
             for (int i = 0; i < bulletsPerShotFinal; i++)
             {
                 Vector3 shotDirection = GetShotDirectionWithinSpread(WeaponMuzzle);
-                ProjectileBase newProjectile = Instantiate(ProjectilePrefab, WeaponMuzzle.position,
+                if (IsHitscan)
+                {
+                    RaycastHit hit;
+                    if (Physics.Raycast(WeaponMuzzle.position, shotDirection, out hit))
+                    {
+                        OnHit(hit.point, hit.normal, hit.collider);
+                    }
+                }
+                else
+                {
+                    ProjectileBase newProjectile = Instantiate(ProjectilePrefab, WeaponMuzzle.position,
                     Quaternion.LookRotation(shotDirection));
-                newProjectile.Shoot(this);
+                    newProjectile.Shoot(this);
+                }
             }
 
             // muzzle flash
@@ -498,5 +531,46 @@ namespace Unity.FPS.Game
 
             return spreadWorldDirection;
         }
+
+        void OnHit(Vector3 point, Vector3 normal, Collider collider)
+        {
+            // damage
+            if (AreaOfDamage)
+            {
+                // area damage
+                AreaOfDamage.InflictDamageInArea(Damage, point, HittableLayers, k_TriggerInteraction,
+                    this.gameObject);
+            }
+            else
+            {
+                // point damage
+                Damageable damageable = collider.GetComponent<Damageable>();
+                if (damageable)
+                {
+                    damageable.InflictDamage(Damage, false, this.gameObject);
+                }
+            }
+
+            // impact vfx
+            if (ImpactVfx)
+            {
+                GameObject impactVfxInstance = Instantiate(ImpactVfx, point + (normal * ImpactVfxSpawnOffset),
+                    Quaternion.LookRotation(normal));
+                if (ImpactVfxLifetime > 0)
+                {
+                    Destroy(impactVfxInstance.gameObject, ImpactVfxLifetime);
+                }
+            }
+
+            // impact sfx
+            if (ImpactSfxClip)
+            {
+                AudioUtility.CreateSFX(ImpactSfxClip, point, AudioUtility.AudioGroups.Impact, 1f, 3f);
+            }
+
+            // Self Destruct
+            Destroy(this.gameObject);
+        }
+
     }
 }

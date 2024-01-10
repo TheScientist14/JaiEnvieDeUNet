@@ -1,9 +1,10 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
+using Unity.Netcode;
 
 namespace Unity.FPS.Game
 {
-    public abstract class ProjectileBase : MonoBehaviour
+    public abstract class ProjectileBase : NetworkBehaviour
     {
         public GameObject Owner { get; private set; }
         public Vector3 InitialPosition { get; private set; }
@@ -15,6 +16,10 @@ namespace Unity.FPS.Game
 
         public void Shoot(WeaponController controller)
         {
+            if (!IsServer)
+            {
+                return;
+            }
             Owner = controller.Owner;
             InitialPosition = transform.position;
             InitialDirection = transform.forward;
