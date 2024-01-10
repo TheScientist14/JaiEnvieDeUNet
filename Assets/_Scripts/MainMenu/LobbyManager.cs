@@ -1,12 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NaughtyAttributes;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -21,12 +23,16 @@ public class LobbyManager : Singleton<LobbyManager>
 	private string _playerName;
 	private Gamemodes _gamemode = 0;
 	private Lobby _lobby;
-	
+	private bool _IsOwnerOfLobbyQuoi;
+	private ILobbyEvents m_LobbyEvents;
+	private LobbyEventCallbacks callbacks = new LobbyEventCallbacks();
+	    
+	    
 	public UnityEvent lobbyCreated;
 	public UnityEvent lobbyJoined;
-
-	private bool _IsOwnerOfLobbyQuoi;
-
+	public UnityEvent kickedEvent;
+	public UnityEvent refreshUI;
+	
 	public string PlayerName
 	{
 		get => _playerName;
@@ -37,6 +43,15 @@ public class LobbyManager : Singleton<LobbyManager>
 	{
 		get => _lobby;
 		set => _lobby = value;
+	}
+
+
+	private void OnDestroy()
+	{
+		if (_lobby != null)
+		{
+			LeaveLobby();
+		}
 	}
 
 	public void ChangeGamemode(Int32 dropdown)
@@ -54,9 +69,30 @@ public class LobbyManager : Singleton<LobbyManager>
 		
 		Debug.Log(AuthenticationService.Instance.PlayerId);
 		
+		callbacks.LobbyChanged += OnLobbyChanged;
+		callbacks.KickedFromLobby += OnKickedFromLobby;
+		callbacks.LobbyEventConnectionStateChanged += OnLobbyEventConnectionStateChanged;
+		
 		GetAndGenerateAllLobbies();
 	}
 
+	private void OnLobbyEventConnectionStateChanged(LobbyEventConnectionState obj)
+	{
+		Debug.Log("StateChange");
+	}
+
+	private void OnKickedFromLobby()
+	{
+		Debug.Log("Kicked");
+		_lobby = null;
+		kickedEvent.Invoke();
+	}
+	private void OnLobbyChanged(ILobbyChanges lobbyChanges)
+	{
+		lobbyChanges.ApplyToLobby(_lobby);
+		refreshUI.Invoke();
+	}
+	
 	public void ButtonSelected(LobbyButton lobbyButton)
 	{
 		btn.onClick.RemoveAllListeners();
@@ -93,12 +129,6 @@ public class LobbyManager : Singleton<LobbyManager>
 			Debug.Log(e);
 		}
 	}
-
-	public async void LeaveLobby()
-	{
-		await LobbyService.Instance.RemovePlayerAsync(_lobby.Id, AuthenticationService.Instance.PlayerId);
-	}
-	
 
 	[Button("Refresh List")]
 	private async void GetAndGenerateAllLobbies()
@@ -164,9 +194,26 @@ public class LobbyManager : Singleton<LobbyManager>
 
 		try
 		{
-			_lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxPlayers, options);
-			StartCoroutine(LobbyHeartBeat());
-			lobbyCreated.Invoke();
+			if (_lobby == null)
+			{
+				_lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxPlayers, options);
+				StartCoroutine(LobbyHeartBeat());
+				
+				try {
+					m_LobbyEvents = await Lobbies.Instance.SubscribeToLobbyEventsAsync(_lobby.Id, callbacks);
+				}
+				catch (LobbyServiceException ex)
+				{
+					switch (ex.Reason) {
+						case LobbyExceptionReason.AlreadySubscribedToLobby: Debug.LogWarning($"Already subscribed to lobby[{LobbyManager.instance.Lobby.Id}]. We did not need to try and subscribe again. Exception Message: {ex.Message}"); break;
+						case LobbyExceptionReason.SubscriptionToLobbyLostWhileBusy: Debug.LogError($"Subscription to lobby events was lost while it was busy trying to subscribe. Exception Message: {ex.Message}"); throw;
+						case LobbyExceptionReason.LobbyEventServiceConnectionError: Debug.LogError($"Failed to connect to lobby events. Exception Message: {ex.Message}"); throw;
+						default: throw;
+					}
+				}
+				
+				lobbyCreated.Invoke();
+			}
 		}
 		catch(Exception e)
 		{
@@ -175,13 +222,28 @@ public class LobbyManager : Singleton<LobbyManager>
 		}
 	}
 
-	public async void DeleteLobby()
+	public async void LeaveLobby()
 	{
 		if (_IsOwnerOfLobbyQuoi)
 		{
+			foreach (var player in _lobby.Players)
+			{
+				if (player.Id != AuthenticationService.Instance.PlayerId)
+				{
+					await LobbyService.Instance.RemovePlayerAsync(_lobby.Id, player.Id);
+				}
+			}
+			
 			await LobbyService.Instance.DeleteLobbyAsync(_lobby.Id);
-			_lobby = null;
 		}
+		else
+		{
+			await LobbyService.Instance.RemovePlayerAsync(_lobby.Id, AuthenticationService.Instance.PlayerId);
+		}
+		
+		//Call Kicked Event for host and kickes clients
+		
+		_lobby = null;
 	}
 
 	private IEnumerator LobbyHeartBeat()
