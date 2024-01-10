@@ -11,6 +11,8 @@ using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using Unity.Services.Matchmaker;
 using Unity.Services.Matchmaker.Models;
+using Unity.Services.Multiplay;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -28,8 +30,10 @@ public class LobbyManager : Singleton<LobbyManager>
 	private Lobby _lobby;
 	private bool _IsOwnerOfLobby = false;
 	private bool _IsWaitingForTicket = false;
-	private ILobbyEvents m_LobbyEvents;
-	private LobbyEventCallbacks callbacks = new LobbyEventCallbacks();
+	private IServerEvents _serverEvents;
+	private ILobbyEvents _lobbyEvents;
+	private MultiplayEventCallbacks _multiplayEventCallbacks = new MultiplayEventCallbacks();
+	private LobbyEventCallbacks _lobbyEventCallbacks = new LobbyEventCallbacks();
 
 	private static string ticketIdKey = "ticketId";
 
@@ -76,9 +80,10 @@ public class LobbyManager : Singleton<LobbyManager>
 
 		Debug.Log(AuthenticationService.Instance.PlayerId);
 
-		callbacks.LobbyChanged += OnLobbyChanged;
-		callbacks.KickedFromLobby += OnKickedFromLobby;
-		callbacks.LobbyEventConnectionStateChanged += OnLobbyEventConnectionStateChanged;
+		_lobbyEventCallbacks.LobbyChanged += OnLobbyChanged;
+		_lobbyEventCallbacks.KickedFromLobby += OnKickedFromLobby;
+		_lobbyEventCallbacks.LobbyEventConnectionStateChanged += OnLobbyEventConnectionStateChanged;
+		
 		init.Invoke();
 	}
 
@@ -129,7 +134,7 @@ public class LobbyManager : Singleton<LobbyManager>
 				lobbyJoined.Invoke();
 			}
 
-			SubToEvents();
+			SubToLobbyEvents();
 
 		}
 		catch(LobbyServiceException e)
@@ -196,8 +201,8 @@ public class LobbyManager : Singleton<LobbyManager>
 				_lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxPlayers, options);
 				_IsOwnerOfLobby = true;
 
-				LobbyHeartBeat();
-				SubToEvents();
+				StartCoroutine(LobbyHeartBeat());
+				SubToLobbyEvents();
 
 				lobbyCreated.Invoke();
 			}
@@ -241,11 +246,14 @@ public class LobbyManager : Singleton<LobbyManager>
 				ticketIdKey, new DataObject(DataObject.VisibilityOptions.Member, ticketResponse.Id)
 			}
 		};
+		Debug.Log("UpdatingLobby");
 		await LobbyService.Instance.UpdateLobbyAsync(Lobby.Id, updateOptions);
+		Debug.Log("Updated lobby");
 	}
 
 	private async void WaitForTicket()
 	{
+		Debug.Log("Wait");
 		if(!Lobby.Data.ContainsKey(ticketIdKey))
 		{
 			Debug.LogWarning("No ticket id in lobby data");
@@ -258,7 +266,8 @@ public class LobbyManager : Singleton<LobbyManager>
 		bool gotAssignment = false;
 		do
 		{
-			await Task.Delay(TimeSpan.FromSeconds(5f));
+			Debug.Log("Waiting");
+			await Task.Delay(TimeSpan.FromSeconds(1.1f));
 
 			// Poll ticket
 			TicketStatusResponse ticketStatus = await MatchmakerService.Instance.GetTicketAsync(ticketId);
@@ -267,9 +276,9 @@ public class LobbyManager : Singleton<LobbyManager>
 				continue;
 
 			//Convert to platform assignment data (IOneOf conversion)
-			if(ticketStatus.Value is MultiplayAssignment)
+			if(ticketStatus.Value is MultiplayAssignment value)
 			{
-				assignment = ticketStatus.Value as MultiplayAssignment;
+				assignment = value;
 			}
 
 			if(assignment == null)
@@ -297,21 +306,21 @@ public class LobbyManager : Singleton<LobbyManager>
 
 		} while(!gotAssignment);
 
-		LeaveLobby();
+		await LeaveLobby();
 
 		// init NGO client side
-		NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(assignment.Ip, (ushort)assignment.Port);
+		NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(assignment.Ip, (ushort)assignment.Port, "0.0.0.0");
 
 		Debug.Log("Connected to " + assignment.Ip + ":" + assignment.Port);
 
 		SceneManager.LoadScene("PVE");
 	}
 
-	private async void SubToEvents()
+	private async void SubToLobbyEvents()
 	{
 		try
 		{
-			m_LobbyEvents = await Lobbies.Instance.SubscribeToLobbyEventsAsync(_lobby.Id, callbacks);
+			_lobbyEvents = await Lobbies.Instance.SubscribeToLobbyEventsAsync(_lobby.Id, _lobbyEventCallbacks);
 		}
 		catch(LobbyServiceException ex)
 		{
@@ -332,8 +341,23 @@ public class LobbyManager : Singleton<LobbyManager>
 		}
 	}
 
-	public async void LeaveLobby()
+	private async Task UnSubToLobbyEvents()
 	{
+		try
+		{
+			await _lobbyEvents.UnsubscribeAsync();
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine(e);
+			throw;
+		}
+	}
+
+	public async Task LeaveLobby()
+	{
+		await UnSubToLobbyEvents();
+		
 		if(_IsOwnerOfLobby)
 		{
 			foreach(var player in _lobby.Players)
@@ -344,25 +368,35 @@ public class LobbyManager : Singleton<LobbyManager>
 				}
 			}
 
-			await LobbyService.Instance.DeleteLobbyAsync(_lobby.Id);
+			try
+			{
+				await LobbyService.Instance.DeleteLobbyAsync(_lobby.Id);
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e);
+				throw;
+			}
+			
 		}
 		else
 		{
 			await LobbyService.Instance.RemovePlayerAsync(_lobby.Id, AuthenticationService.Instance.PlayerId);
 		}
 
-		//Call Kicked Event for host and kickes clients
+		//Calls Kicked Event for host and kickes clients
 
 		_lobby = null;
+		kickedEvent.Invoke();
 	}
 
-	private async void LobbyHeartBeat()
+	private IEnumerator LobbyHeartBeat()
 	{
 		while(_lobby != null)
 		{
-			await LobbyService.Instance.SendHeartbeatPingAsync(_lobby.Id);
+			LobbyService.Instance.SendHeartbeatPingAsync(_lobby.Id);
 
-			await Task.Delay(TimeSpan.FromSeconds(heartBeatFrequency));
+			yield return new WaitForSeconds(heartBeatFrequency);
 		}
 	}
 
