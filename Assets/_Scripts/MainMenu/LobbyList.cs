@@ -15,10 +15,7 @@ public class LobbyList : MonoBehaviour
     
     private void Start()
     {
-        LobbyManager.instance.init.AddListener(async ()=>
-        {
-           await RefreshUIasync();
-        });
+        LobbyManager.instance.init.AddListener(RefreshUI);
     }
 
     public void ButtonSelected(LobbyButton lobbyButton)
@@ -48,14 +45,9 @@ public class LobbyList : MonoBehaviour
         }
     }
 
-    public async Task RefreshUIasync()
+    public async void RefreshUI()
     {
         Debug.Log("Refresh");
         CreateListOfLobbiesInMenu(await LobbyManager.instance.GetAllLobbies());
-    }
-
-    public void RefreshUI()
-    {
-        RefreshUIasync();
     }
 }
