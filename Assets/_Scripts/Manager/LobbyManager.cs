@@ -193,8 +193,8 @@ public class LobbyManager : Singleton<LobbyManager>
 			{
 				_lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxPlayers, options);
 				_IsOwnerOfLobby = true;
-				StartCoroutine(LobbyHeartBeat());
-
+				
+				LobbyHeartBeat();
 				SubToEvents();
 
 				lobbyCreated.Invoke();
@@ -348,13 +348,13 @@ public class LobbyManager : Singleton<LobbyManager>
 		_lobby = null;
 	}
 
-	private IEnumerator LobbyHeartBeat()
+	private async void LobbyHeartBeat()
 	{
 		while(_lobby != null)
 		{
-			LobbyService.Instance.SendHeartbeatPingAsync(_lobby.Id);
+			await LobbyService.Instance.SendHeartbeatPingAsync(_lobby.Id);
 
-			yield return new WaitForSeconds(heartBeatFrequency);
+			await Task.Delay(TimeSpan.FromSeconds(heartBeatFrequency));
 		}
 	}
 
