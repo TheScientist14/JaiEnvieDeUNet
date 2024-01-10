@@ -46,9 +46,9 @@ public class LobbyManager : Singleton<LobbyManager>
 	{
 		var options = new InitializationOptions();
 		options.SetProfile(_playerName);
-		await UnityServices.InitializeAsync(options);
 		
-		await AuthenticationService.Instance.SignInAnonymouslyAsync();
+		if (UnityServices.State != ServicesInitializationState.Initialized) await UnityServices.InitializeAsync(options);
+		if (!AuthenticationService.Instance.IsSignedIn) await AuthenticationService.Instance.SignInAnonymouslyAsync();
 		
 		Debug.Log(AuthenticationService.Instance.PlayerId);
 		
