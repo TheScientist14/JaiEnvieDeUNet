@@ -25,6 +25,8 @@ public class LobbyManager : Singleton<LobbyManager>
 	public UnityEvent lobbyCreated;
 	public UnityEvent lobbyJoined;
 
+	private bool _IsOwnerOfLobbyQuoi;
+
 	public string PlayerName
 	{
 		get => _playerName;
@@ -91,6 +93,12 @@ public class LobbyManager : Singleton<LobbyManager>
 			Debug.Log(e);
 		}
 	}
+
+	public async void LeaveLobby()
+	{
+		await LobbyService.Instance.RemovePlayerAsync(_lobby.Id, AuthenticationService.Instance.PlayerId);
+	}
+	
 
 	[Button("Refresh List")]
 	private async void GetAndGenerateAllLobbies()
@@ -164,6 +172,15 @@ public class LobbyManager : Singleton<LobbyManager>
 		{
 			Console.WriteLine(e);
 			throw;
+		}
+	}
+
+	public async void DeleteLobby()
+	{
+		if (_IsOwnerOfLobbyQuoi)
+		{
+			await LobbyService.Instance.DeleteLobbyAsync(_lobby.Id);
+			_lobby = null;
 		}
 	}
 

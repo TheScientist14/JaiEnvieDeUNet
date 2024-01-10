@@ -32,6 +32,8 @@ public class MainLobby : NetworkBehaviour
         
         var callbacks = new LobbyEventCallbacks();
         callbacks.LobbyChanged += OnLobbyChanged;
+        callbacks.KickedFromLobby += OnKickedFromLobby;
+        callbacks.LobbyEventConnectionStateChanged += OnLobbyEventConnectionStateChanged;
         
         try {
             m_LobbyEvents = await Lobbies.Instance.SubscribeToLobbyEventsAsync(LobbyManager.instance.Lobby.Id, callbacks);
@@ -48,7 +50,17 @@ public class MainLobby : NetworkBehaviour
         
         RefreshUI();
     }
-    
+
+    private void OnLobbyEventConnectionStateChanged(LobbyEventConnectionState obj)
+    {
+        Debug.Log("StateChange");
+    }
+
+    private void OnKickedFromLobby()
+    {
+        Debug.Log("Kicked");
+    }
+
     private void OnLobbyChanged(ILobbyChanges lobbyChanges)
     {
         lobbyChanges.ApplyToLobby(LobbyManager.instance.Lobby);
