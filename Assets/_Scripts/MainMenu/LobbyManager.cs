@@ -1,18 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using NaughtyAttributes;
-using TMPro;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
-using Unity.Services.Matchmaker;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class LobbyManager : Singleton<LobbyManager>
@@ -27,6 +23,7 @@ public class LobbyManager : Singleton<LobbyManager>
 	private Lobby _lobby;
 	
 	public UnityEvent lobbyCreated;
+	public UnityEvent lobbyJoined;
 
 	public string PlayerName
 	{
@@ -34,24 +31,36 @@ public class LobbyManager : Singleton<LobbyManager>
 		set => _playerName = value;
 	}
 
-	public Lobby Lobby => _lobby;
+	public Lobby Lobby
+	{
+		get => _lobby;
+		set => _lobby = value;
+	}
 
 	public void ChangeGamemode(Int32 dropdown)
 	{
 		_gamemode = (Gamemodes)dropdown;
 	}
 
-	private async void Start()
+	public async void Init()
 	{
-		await UnityServices.InitializeAsync();
+		var options = new InitializationOptions();
+		options.SetProfile(_playerName);
+		await UnityServices.InitializeAsync(options);
+		
 		await AuthenticationService.Instance.SignInAnonymouslyAsync();
+		
+		Debug.Log(AuthenticationService.Instance.PlayerId);
+		
 		GetAndGenerateAllLobbies();
 	}
 
 	public void ButtonSelected(LobbyButton lobbyButton)
 	{
 		btn.onClick.RemoveAllListeners();
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 		btn.onClick.AddListener(() => JoinLobby(lobbyButton.GetLobbyId()));
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 	}
 
 	private async Task JoinLobby(String joinCode, bool isLobbyCode = false)
@@ -64,7 +73,8 @@ public class LobbyManager : Singleton<LobbyManager>
 				{
 					Player = GetPlayer()
 				};
-				await LobbyService.Instance.JoinLobbyByCodeAsync(joinCode, joinLobbyByCodeOptions);
+				_lobby = await LobbyService.Instance.JoinLobbyByCodeAsync(joinCode, joinLobbyByCodeOptions);
+				lobbyJoined.Invoke();
 			}
 			else
 			{
@@ -72,7 +82,8 @@ public class LobbyManager : Singleton<LobbyManager>
 				{
 					Player = GetPlayer()
 				};
-				await LobbyService.Instance.JoinLobbyByIdAsync(joinCode,joinLobbyByIdOptions);
+				_lobby = await LobbyService.Instance.JoinLobbyByIdAsync(joinCode,joinLobbyByIdOptions);
+				lobbyJoined.Invoke();
 			}
 		}
 		catch(LobbyServiceException e)
@@ -154,8 +165,6 @@ public class LobbyManager : Singleton<LobbyManager>
 			Console.WriteLine(e);
 			throw;
 		}
-		
-		
 	}
 
 	private IEnumerator LobbyHeartBeat()
