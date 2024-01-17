@@ -19,7 +19,7 @@ public class PlayerBehaviour : NetworkBehaviour
 	private bool _hasJumped = false;
 	private Collider _ground = null;
 
-	private float _backupDrag;
+	[SerializeField] private float airControl = 0;
 
 	private void Start()
 	{
@@ -27,15 +27,14 @@ public class PlayerBehaviour : NetworkBehaviour
 		_inputManager = InputManager.instance;
 		_camTransform = GetComponentInChildren<Camera>().transform;
 		_virtualCamera = GetComponentInChildren<CinemachineVirtualCamera>();
-		
-		if (!IsOwner)
+
+		if(!IsOwner)
 		{
 			_camTransform.gameObject.SetActive(false);
 			_virtualCamera.gameObject.SetActive(false);
 			Destroy(this);
 			return;
 		}
-		
 
 		_virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_HorizontalAxis.m_MaxSpeed = camSens.x * 0.01f;
 		_virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_VerticalAxis.m_MaxSpeed = camSens.y * 0.01f;
@@ -49,17 +48,13 @@ public class PlayerBehaviour : NetworkBehaviour
 
 	void FixedUpdate()
 	{
-		if(!IsGrounded())
-		{
-			_backupDrag = _rb.drag;
-			_rb.drag = 0;
-			return;
-		}
-		_rb.drag = _backupDrag;
-
 		Vector3 forward = _camTransform.forward;
 		forward.y = 0;
 		Vector3 move = forward.normalized * _inputManager.GetPlayerMovement().y + _camTransform.right * _inputManager.GetPlayerMovement().x;
+
+		if(!IsGrounded())
+			move *= airControl;
+
 		_rb.AddForce(move * playerSpeed, ForceMode.Acceleration);
 
 		if(_hasJumped)
