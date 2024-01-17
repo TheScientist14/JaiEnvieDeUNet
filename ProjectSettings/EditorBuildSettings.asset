@@ -9,6 +9,18 @@ EditorBuildSettings:
     path: Assets/Scenes/IntroMenu.unity
     guid: 8f21d3b3905b06542be646a66ed698d7
   - enabled: 1
+    path: Assets/Scenes/GamemodeSetup.unity
+    guid: d9bb5ed4c0fd1cf4daa63dcf95fb60fc
+  - enabled: 1
     path: Assets/Scenes/PVE.unity
     guid: 871c777dc4b6f4948be7289fc13b6fd9
+  - enabled: 1
+    path: Assets/Scenes/TeamDeathmatch.unity
+    guid: e5e5e6070d3ac24408e65676d15a7b8b
+  - enabled: 1
+    path: Assets/Scenes/FFA.unity
+    guid: 70fa1b942e5a64d429ae682bc168c4e9
+  - enabled: 1
+    path: Assets/Scenes/KingOfTheHill.unity
+    guid: 373ed85fdeeac4b45953913f33f96b6e
   m_configObjects: {}

@@ -67,6 +67,16 @@ public class LobbyManager : Singleton<LobbyManager>
 		_gamemode = (Gamemodes)dropdown;
 	}
 
+	public Gamemodes GetGamemode()
+	{
+		return _gamemode;
+	}
+
+	public bool IsLobbyHost()
+	{
+		return _IsOwnerOfLobby;
+	}
+
 	public async void Init()
 	{
 		var options = new InitializationOptions();
@@ -102,11 +112,11 @@ public class LobbyManager : Singleton<LobbyManager>
 		Debug.Log("Lobby changed");
 		lobbyChanges.ApplyToLobby(_lobby);
 
-		if (!_IsOwnerOfLobby)
+		if(!_IsOwnerOfLobby)
 		{
 			JoinServer();
 		}
-		
+
 		refreshUI.Invoke();
 	}
 
@@ -117,15 +127,13 @@ public class LobbyManager : Singleton<LobbyManager>
 			Debug.Log("Joining Server");
 			string ip = _lobby.Data[k_ServerIp].Value;
 			ushort port = ushort.Parse(_lobby.Data[k_ServerPort].Value);
-            
+
 			await LeaveLobby();
-            
+
 			// init NGO client side
 			NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(ip, port);
-            
+
 			Debug.Log("Connected to " + ip + ":" + port);
-            
-			SceneManager.LoadScene("PVE");
 		}
 	}
 
@@ -268,9 +276,9 @@ public class LobbyManager : Singleton<LobbyManager>
 
 	private string GetQueueName()
 	{
-		switch (_lobby.Data["Gamemode"].Value)
+		switch(_lobby.Data["Gamemode"].Value)
 		{
-			default: 
+			default:
 				return "PVEQueue";
 			case "TeamDeathmatch":
 				return "TDMQueue";
@@ -280,7 +288,7 @@ public class LobbyManager : Singleton<LobbyManager>
 				return "FfAQueue";
 		}
 	}
-	
+
 	private async void WaitForTicket(string prmTicketId)
 	{
 		Debug.Log("Wait");
@@ -330,7 +338,7 @@ public class LobbyManager : Singleton<LobbyManager>
 		} while(!gotAssignment);
 
 		Debug.Log("Updating Lobby");
-		
+
 		UpdateLobbyOptions updateOptions = new UpdateLobbyOptions();
 
 		updateOptions.Data = new Dictionary<string, DataObject>()
@@ -346,7 +354,7 @@ public class LobbyManager : Singleton<LobbyManager>
 		await LobbyService.Instance.UpdateLobbyAsync(Lobby.Id, updateOptions);
 
 		Debug.Log("Server Found");
-		
+
 		JoinServer();
 	}
 
@@ -393,11 +401,11 @@ public class LobbyManager : Singleton<LobbyManager>
 	{
 		Debug.Log("LeavingLobby");
 
-		if (_lobby == null)
+		if(_lobby == null)
 		{
 			return;
 		}
-        
+
 		await UnSubToLobbyEvents();
 
 		if(_IsOwnerOfLobby)
@@ -414,9 +422,9 @@ public class LobbyManager : Singleton<LobbyManager>
 					catch { }
 				}
 			}
-			
+
 			Debug.Log("Kicked all players");
-			
+
 
 			try
 			{

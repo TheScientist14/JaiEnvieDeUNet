@@ -1,16 +1,13 @@
-using System.Collections;
-using System.Collections.Generic;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
-using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Matchmaker.Models;
 using Unity.Services.Multiplay;
 using UnityEngine;
 
-public class Gamemode : NetworkBehaviour
+public class NetworkInit : NetworkBehaviour
 {
-	[SerializeField] private Transform m_TestTransform;
+	[SerializeField] private NetworkManager m_NetworkManagerPrefab;
 
 	// Start is called before the first frame update
 	async void Start()
@@ -19,8 +16,14 @@ public class Gamemode : NetworkBehaviour
 		{
 			Debug.Log("Init client");
 			NetworkManager.Singleton.StartClient();
+
+			if(LobbyManager.instance.IsLobbyHost())
+				LoadASceneServerRPC(LobbyManager.instance.GetGamemode().ToString());
+
 			return;
 		}
+
+		Instantiate(m_NetworkManagerPrefab);
 
 		await UnityServices.InitializeAsync();
 		Debug.Log("Unity services initialized");
@@ -29,9 +32,7 @@ public class Gamemode : NetworkBehaviour
 		var payloadAllocation = await MultiplayService.Instance.GetPayloadAllocationFromJsonAs<MatchmakingResults>();
 
 		if(payloadAllocation == null)
-		{
 			Debug.LogError("No allocation");
-		}
 
 		NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(
 			MultiplayService.Instance.ServerConfig.IpAddress, MultiplayService.Instance.ServerConfig.Port, "0.0.0.0");
@@ -42,12 +43,9 @@ public class Gamemode : NetworkBehaviour
 		Debug.Log("Server is ready for players");
 	}
 
-	// Update is called once per frame
-	void Update()
+	[ServerRpc(RequireOwnership = false)]
+	public void LoadASceneServerRPC(string iSceneName)
 	{
-		if(!IsServer)
-			return;
-
-		m_TestTransform.Rotate(Vector3.right * Time.deltaTime * 5);
+		NetworkManager.Singleton.SceneManager.LoadScene(iSceneName, UnityEngine.SceneManagement.LoadSceneMode.Additive);
 	}
 }
