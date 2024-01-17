@@ -18,7 +18,10 @@ public class NetworkInit : NetworkBehaviour
 			NetworkManager.Singleton.StartClient();
 
 			if(LobbyManager.instance.IsLobbyHost())
+			{
+				Debug.Log("Loading scene");
 				LoadASceneServerRPC(LobbyManager.instance.GetGamemode().ToString());
+			}
 
 			return;
 		}
@@ -37,7 +40,10 @@ public class NetworkInit : NetworkBehaviour
 		NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(
 			MultiplayService.Instance.ServerConfig.IpAddress, MultiplayService.Instance.ServerConfig.Port, "0.0.0.0");
 		NetworkManager.Singleton.StartServer();
+		NetworkManager.Singleton.SceneManager.SetClientSynchronizationMode(UnityEngine.SceneManagement.LoadSceneMode.Additive);
 		Debug.Log("NGO initialized");
+
+		Application.targetFrameRate = 60;
 
 		await MultiplayService.Instance.ReadyServerForPlayersAsync();
 		Debug.Log("Server is ready for players");

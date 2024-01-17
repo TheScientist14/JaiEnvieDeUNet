@@ -134,6 +134,8 @@ public class LobbyManager : Singleton<LobbyManager>
 			NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(ip, port);
 
 			Debug.Log("Connected to " + ip + ":" + port);
+
+			SceneManager.LoadScene("GamemodeSetup");
 		}
 	}
 
