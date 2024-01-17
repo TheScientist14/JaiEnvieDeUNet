@@ -27,6 +27,13 @@ public class PlayerBehaviour : NetworkBehaviour
 		_inputManager = InputManager.instance;
 		_camTransform = GetComponentInChildren<Camera>().transform;
 		_virtualCamera = GetComponentInChildren<CinemachineVirtualCamera>();
+		
+		if (!IsOwner)
+		{
+			_camTransform.gameObject.SetActive(false);
+			_virtualCamera.gameObject.SetActive(false);
+			Destroy(this);
+		}
 
 		_virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_HorizontalAxis.m_MaxSpeed = camSens.x * 0.01f;
 		_virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_VerticalAxis.m_MaxSpeed = camSens.y * 0.01f;
@@ -40,9 +47,6 @@ public class PlayerBehaviour : NetworkBehaviour
 
 	void FixedUpdate()
 	{
-		if(!IsOwner)
-			return;
-
 		if(!IsGrounded())
 		{
 			_backupDrag = _rb.drag;
