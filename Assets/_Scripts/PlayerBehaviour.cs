@@ -1,6 +1,7 @@
 using Cinemachine;
 using UnityEngine;
 using Unity.Netcode;
+using Unity.XR.OpenVR;
 
 
 [RequireComponent(typeof(Rigidbody))]
