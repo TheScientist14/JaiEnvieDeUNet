@@ -245,7 +245,7 @@ public class LobbyManager : Singleton<LobbyManager>
 
 		// Set options for matchmaking
 		var options = new CreateTicketOptions(
-		  "DefaultQ", // The name of the queue defined in the previous step, 
+		  GetQueueName(), // The name of the queue defined in the previous step, 
 		  new Dictionary<string, object>());
 
 		// Create ticket
@@ -266,6 +266,21 @@ public class LobbyManager : Singleton<LobbyManager>
 		WaitForTicket(ticketResponse.Id);
 	}
 
+	private string GetQueueName()
+	{
+		switch (_lobby.Data["Gamemode"].Value)
+		{
+			default: 
+				return "PVEQueue";
+			case "TeamDeathmatch":
+				return "TDMQueue";
+			case "KingOfTheHill":
+				return "KotHQueue";
+			case "FFA":
+				return "FfAQueue";
+		}
+	}
+	
 	private async void WaitForTicket(string prmTicketId)
 	{
 		Debug.Log("Wait");

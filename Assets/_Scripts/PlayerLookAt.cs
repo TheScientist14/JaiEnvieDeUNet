@@ -20,6 +20,6 @@ public class PlayerLookAt : NetworkBehaviour
 
     private void FixedUpdate()
     {
-        transform.LookAt(camera.forward);
+        transform.LookAt(-camera.up);
     }
 }
