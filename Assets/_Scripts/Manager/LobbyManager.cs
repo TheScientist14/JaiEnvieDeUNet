@@ -99,26 +99,34 @@ public class LobbyManager : Singleton<LobbyManager>
 	}
 	private async void OnLobbyChanged(ILobbyChanges lobbyChanges)
 	{
+		Debug.Log("Lobby changed");
 		lobbyChanges.ApplyToLobby(_lobby);
 
+		if (!_IsOwnerOfLobby)
+		{
+			JoinServer();
+		}
+		
+		refreshUI.Invoke();
+	}
+
+	private async void JoinServer()
+	{
 		if(_lobby.Data.ContainsKey(k_ServerIp))
 		{
+			Debug.Log("Joining Server");
 			string ip = _lobby.Data[k_ServerIp].Value;
 			ushort port = ushort.Parse(_lobby.Data[k_ServerPort].Value);
-
+            
 			await LeaveLobby();
-
+            
 			// init NGO client side
 			NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(ip, port);
-
+            
 			Debug.Log("Connected to " + ip + ":" + port);
-
+            
 			SceneManager.LoadScene("PVE");
-			
-			return;
 		}
-
-		refreshUI.Invoke();
 	}
 
 	public async Task JoinLobby(String joinCode, bool isLobbyCode = false)
@@ -306,6 +314,8 @@ public class LobbyManager : Singleton<LobbyManager>
 
 		} while(!gotAssignment);
 
+		Debug.Log("Updating Lobby");
+		
 		UpdateLobbyOptions updateOptions = new UpdateLobbyOptions();
 
 		updateOptions.Data = new Dictionary<string, DataObject>()
@@ -320,7 +330,9 @@ public class LobbyManager : Singleton<LobbyManager>
 
 		await LobbyService.Instance.UpdateLobbyAsync(Lobby.Id, updateOptions);
 
-
+		Debug.Log("Server Found");
+		
+		JoinServer();
 	}
 
 	private async void SubToLobbyEvents()
@@ -352,6 +364,7 @@ public class LobbyManager : Singleton<LobbyManager>
 	{
 		try
 		{
+			Debug.Log("Unsubing from Lobby events");
 			await _lobbyEvents.UnsubscribeAsync();
 		}
 		catch(Exception e)
@@ -363,6 +376,13 @@ public class LobbyManager : Singleton<LobbyManager>
 
 	public async Task LeaveLobby()
 	{
+		Debug.Log("LeavingLobby");
+
+		if (_lobby == null)
+		{
+			return;
+		}
+        
 		await UnSubToLobbyEvents();
 
 		if(_IsOwnerOfLobby)
@@ -374,14 +394,19 @@ public class LobbyManager : Singleton<LobbyManager>
 					try
 					{
 						await LobbyService.Instance.RemovePlayerAsync(_lobby.Id, player.Id);
+						Debug.Log($"Kicked {player.Id}");
 					}
 					catch { }
 				}
 			}
+			
+			Debug.Log("Kicked all players");
+			
 
 			try
 			{
 				await LobbyService.Instance.DeleteLobbyAsync(_lobby.Id);
+				Debug.Log("Deleted Lobby");
 			}
 			catch(Exception e)
 			{
@@ -395,6 +420,7 @@ public class LobbyManager : Singleton<LobbyManager>
 			try
 			{
 				await LobbyService.Instance.RemovePlayerAsync(_lobby.Id, AuthenticationService.Instance.PlayerId);
+				Debug.Log("Removed self from lobby");
 			}
 			catch
 			{
