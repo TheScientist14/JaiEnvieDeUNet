@@ -1,59 +1,81 @@
 using Cinemachine;
 using UnityEngine;
+using Unity.Netcode;
 
 
-[RequireComponent(typeof(CharacterController))]
-public class PlayerBehaviour : MonoBehaviour
+[RequireComponent(typeof(Rigidbody))]
+public class PlayerBehaviour : NetworkBehaviour
 {
-    [SerializeField] private Vector2 camSens = new(100, 100);
-    [SerializeField] private float playerSpeed = 2.0f;
-    [SerializeField] private float jumpHeight = 1.0f;
-    [SerializeField] private float gravityValue = -9.81f;
+	[SerializeField] private Vector2 camSens = new(100, 100);
+	[SerializeField] private float playerSpeed = 2.0f;
+	[SerializeField] private float jumpHeight = 1.0f;
 
+	private Rigidbody _rb;
+	private InputManager _inputManager;
+	private Transform _camTransform;
+	private CinemachineVirtualCamera _virtualCamera;
 
-    private CharacterController _controller;
-    private Vector3 _playerVelocity;
-    private bool _groundedPlayer;
-    private InputManager _inputManager;
-    private Transform _camTransform;
-    private CinemachineVirtualCamera _virtualCamera;
+	private bool _hasJumped = false;
+	private Collider _ground = null;
 
-    private void Start()
-    {
-        _controller = GetComponent<CharacterController>();
-        _inputManager = InputManager.instance;
-        _camTransform = GetComponentInChildren<Camera>().transform;
-        _virtualCamera = GetComponentInChildren<CinemachineVirtualCamera>();
-    }
+	private float _backupDrag;
 
-    void Update()
-    {
-        _virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_HorizontalAxis.m_MaxSpeed = camSens.x / 100;
-        _virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_VerticalAxis.m_MaxSpeed = camSens.y / 100;
+	private void Start()
+	{
+		_rb = GetComponent<Rigidbody>();
+		_inputManager = InputManager.instance;
+		_camTransform = GetComponentInChildren<Camera>().transform;
+		_virtualCamera = GetComponentInChildren<CinemachineVirtualCamera>();
 
-        _groundedPlayer = _controller.isGrounded;
-        if (_groundedPlayer && _playerVelocity.y < 0)
-        {
-            _playerVelocity.y = 0f;
-        }
+		_virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_HorizontalAxis.m_MaxSpeed = camSens.x * 0.01f;
+		_virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_VerticalAxis.m_MaxSpeed = camSens.y * 0.01f;
+	}
 
-        Vector3 move = new Vector3(_inputManager.GetPlayerMovement().x, 0, _inputManager.GetPlayerMovement().y);
-        move = _camTransform.forward * move.z + _camTransform.right * move.x;
-        move.y = 0f;
-        _controller.Move(move * (Time.deltaTime * playerSpeed));
+	void Update()
+	{
+		if(IsGrounded() && _inputManager.PlayerJumped())
+			_hasJumped = true;
+	}
 
-        // if (move != Vector3.zero)
-        // {
-        //     gameObject.transform.forward = move;
-        // }
+	void FixedUpdate()
+	{
+		if(!IsOwner)
+			return;
 
-        // Changes the height position of the player..
-        if (_inputManager.PlayerJumped() && _groundedPlayer)
-        {
-            _playerVelocity.y += Mathf.Sqrt(jumpHeight * -3.0f * gravityValue);
-        }
+		if(!IsGrounded())
+		{
+			_backupDrag = _rb.drag;
+			_rb.drag = 0;
+			return;
+		}
+		_rb.drag = _backupDrag;
 
-        _playerVelocity.y += gravityValue * Time.deltaTime;
-        _controller.Move(_playerVelocity * Time.deltaTime);
-    }
+		Vector3 forward = _camTransform.forward;
+		forward.y = 0;
+		Vector3 move = forward.normalized * _inputManager.GetPlayerMovement().y + _camTransform.right * _inputManager.GetPlayerMovement().x;
+		_rb.AddForce(move * playerSpeed, ForceMode.Acceleration);
+
+		if(_hasJumped)
+		{
+			_hasJumped = false;
+			_rb.AddForce(Vector3.up * jumpHeight, ForceMode.Acceleration);
+		}
+	}
+
+	private bool IsGrounded()
+	{
+		return _ground != null;
+	}
+
+	void OnCollisionEnter(Collision iCollision)
+	{
+		if(Vector3.Dot(iCollision.GetContact(0).normal, Vector3.up) > 0.8f)
+			_ground = iCollision.collider;
+	}
+
+	void OnCollisionExit(Collision iCollision)
+	{
+		if(iCollision.collider == _ground)
+			_ground = null;
+	}
 }

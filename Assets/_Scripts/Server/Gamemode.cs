@@ -12,8 +12,6 @@ public class Gamemode : NetworkBehaviour
 {
 	[SerializeField] private Transform m_TestTransform;
 
-	private IServerQueryHandler m_ServerQueryHandler;
-
 	// Start is called before the first frame update
 	async void Start()
 	{
@@ -42,8 +40,6 @@ public class Gamemode : NetworkBehaviour
 
 		await MultiplayService.Instance.ReadyServerForPlayersAsync();
 		Debug.Log("Server is ready for players");
-
-		m_ServerQueryHandler = await MultiplayService.Instance.StartServerQueryHandlerAsync(20, "TheSERVER", "PVE", "TheOnlyOneBuildInEurope", "Yaqu'uneseulmapfrero");
 	}
 
 	// Update is called once per frame
@@ -51,8 +47,6 @@ public class Gamemode : NetworkBehaviour
 	{
 		if(!IsServer)
 			return;
-
-		m_ServerQueryHandler.UpdateServerCheck();
 
 		m_TestTransform.Rotate(Vector3.right * Time.deltaTime * 5);
 	}
