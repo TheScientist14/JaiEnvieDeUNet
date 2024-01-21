@@ -12,11 +12,9 @@ using Unity.Services.Lobbies.Models;
 using Unity.Services.Matchmaker;
 using Unity.Services.Matchmaker.Models;
 using Unity.Services.Multiplay;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 using static GameConstants;
 using Player = Unity.Services.Lobbies.Models.Player;
 using PlayerM = Unity.Services.Matchmaker.Models.Player;
@@ -35,6 +33,9 @@ public class LobbyManager : Singleton<LobbyManager>
 	private ILobbyEvents _lobbyEvents;
 	private MultiplayEventCallbacks _multiplayEventCallbacks = new MultiplayEventCallbacks();
 	private LobbyEventCallbacks _lobbyEventCallbacks = new LobbyEventCallbacks();
+
+	private string ServerIp;
+	private ushort ServerPort;
 
 	public UnityEvent lobbyCreated;
 	public UnityEvent lobbyJoined;
@@ -107,7 +108,7 @@ public class LobbyManager : Singleton<LobbyManager>
 		_lobby = null;
 		kickedEvent.Invoke();
 	}
-	private async void OnLobbyChanged(ILobbyChanges lobbyChanges)
+	private void OnLobbyChanged(ILobbyChanges lobbyChanges)
 	{
 		Debug.Log("Lobby changed");
 		lobbyChanges.ApplyToLobby(_lobby);
@@ -122,12 +123,25 @@ public class LobbyManager : Singleton<LobbyManager>
 
 	private async void JoinServer()
 	{
-		if(_lobby.Data.ContainsKey(k_ServerIp))
+		Debug.Log("Joining Started: " + _lobby.Data.ContainsKey(k_ServerIp));
+
+
+		if(_lobby.Data.ContainsKey(k_ServerIp) || _IsOwnerOfLobby)
 		{
 			Debug.Log("Joining Server");
-			string ip = _lobby.Data[k_ServerIp].Value;
-			ushort port = ushort.Parse(_lobby.Data[k_ServerPort].Value);
-
+			string ip;
+			ushort port;
+			if (_IsOwnerOfLobby)
+			{
+				ip = ServerIp;
+				port = ServerPort;
+			}
+			else
+			{
+				ip = _lobby.Data[k_ServerIp].Value;
+                			 port = ushort.Parse(_lobby.Data[k_ServerPort].Value);
+			}
+			
 			await LeaveLobby();
 
 			// init NGO client side
@@ -135,7 +149,7 @@ public class LobbyManager : Singleton<LobbyManager>
 
 			Debug.Log("Connected to " + ip + ":" + port);
 
-			SceneManager.LoadScene("GamemodeSetup");
+			SceneManager.LoadScene("GamemodeSetup", LoadSceneMode.Additive);
 		}
 	}
 
@@ -356,6 +370,9 @@ public class LobbyManager : Singleton<LobbyManager>
 		await LobbyService.Instance.UpdateLobbyAsync(Lobby.Id, updateOptions);
 
 		Debug.Log("Server Found");
+
+		ServerIp = assignment.Ip;
+		ServerPort = ushort.Parse(assignment.Port.ToString());
 
 		JoinServer();
 	}
