@@ -4,6 +4,7 @@ using Unity.Services.Lobbies;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 
 public class MainLobby : NetworkBehaviour
 {
@@ -12,6 +13,7 @@ public class MainLobby : NetworkBehaviour
     [SerializeField] private GameObject lobbyUI;
     [SerializeField] private GameObject[] uiToDeactivate;
     [SerializeField] private TMP_Text lobbyName;
+    [SerializeField] private Button playButton;
 
     
     void Start()
@@ -31,6 +33,8 @@ public class MainLobby : NetworkBehaviour
 
         lobbyUI.SetActive(true);
         lobbyName.text = LobbyManager.instance.Lobby.Name;
+        
+        playButton.interactable = LobbyManager.instance.IsLobbyHost();
         
         RefreshUI();
     }
