@@ -149,7 +149,7 @@ public class LobbyManager : Singleton<LobbyManager>
 
 			Debug.Log("Connected to " + ip + ":" + port);
 
-			SceneManager.LoadScene("GamemodeSetup", LoadSceneMode.Additive);
+			SceneManager.LoadScene("GamemodeSetup");
 		}
 	}
 
@@ -374,6 +374,8 @@ public class LobbyManager : Singleton<LobbyManager>
 		ServerIp = assignment.Ip;
 		ServerPort = ushort.Parse(assignment.Port.ToString());
 
+		_IsWaitingForTicket = false;
+        
 		JoinServer();
 	}
 
