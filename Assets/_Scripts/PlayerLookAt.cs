@@ -3,10 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class PlayerLookAt : NetworkBehaviour
 {
-    [SerializeField] private Transform camera;
+    [SerializeField] private Transform cameraTransform;
 
     private void Start()
     {
@@ -20,6 +21,6 @@ public class PlayerLookAt : NetworkBehaviour
 
     private void FixedUpdate()
     {
-        transform.LookAt(-camera.up);
+        transform.LookAt(-cameraTransform.up);
     }
 }
