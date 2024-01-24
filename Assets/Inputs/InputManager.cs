@@ -7,8 +7,13 @@ using UnityEngine.InputSystem;
 public class InputManager : Singleton<InputManager>
 {
 	private Inputs _inputs;
+	private bool _isHoldingShoot = false;
+	private bool _isHoldingAimDownSight = false;
 
-	protected override void Awake()
+    public bool IsHoldingShoot { get => _isHoldingShoot; set => _isHoldingShoot = value; }
+    public bool IsHoldingAimDownSight { get => _isHoldingAimDownSight; set => _isHoldingAimDownSight = value; }
+
+    protected override void Awake()
 	{
 		base.Awake();
 
@@ -16,7 +21,30 @@ public class InputManager : Singleton<InputManager>
 		Cursor.visible = false;
 	}
 
-	private void OnEnable()
+    private void Start()
+    {
+		_inputs.Player.Fire.performed += (InputAction) =>
+		{
+			_isHoldingShoot = true;
+		};
+
+        _inputs.Player.Fire.canceled += (InputAction) =>
+        {
+            _isHoldingShoot = false;
+        };
+
+        _inputs.Player.Zoom.performed += (InputAction) =>
+		{
+			_isHoldingAimDownSight = true;
+		};
+
+        _inputs.Player.Zoom.canceled += (InputAction) =>
+        {
+            _isHoldingAimDownSight = false;
+        };
+    }
+
+    private void OnEnable()
 	{
 		_inputs.Enable();
 	}
@@ -46,9 +74,24 @@ public class InputManager : Singleton<InputManager>
 		return _inputs.Player.Fire.triggered;
 	}
 
-	public bool PlayerAimDownSight()
+	public bool PlayerHoldDownFire()
 	{
-		return _inputs.Player.Zoom.triggered;
+		return _inputs.Player.Fire.IsInProgress();
+	}
+
+	public bool PlayerCancelFire()
+	{
+		return _inputs.Player.Fire.WasReleasedThisFrame();
+	}
+
+	public bool PlayerHoldAimDownSight()
+	{
+		return _inputs.Player.Zoom.IsInProgress();
+	}
+
+	public bool PlayerCancelAimDownSight()
+	{
+		return _inputs.Player.Zoom.WasReleasedThisFrame();
 	}
 
 	public bool PlayerReload()

@@ -17,10 +17,14 @@ public class PlayerBehaviour : NetworkBehaviour
     [Header("Weapons")]
 	[SerializeField] private List<WeaponController> weapons = new List<WeaponController>();
 	[SerializeField] private Transform weaponSocket;
+	[SerializeField] private Transform aimingWeaponSocket;
+	[SerializeField] private float aimingAnimationSpeed;
 	private WeaponController[] weaponSlots = new WeaponController[4];
 	private int activeWeaponIndex = 0;
 	private bool isAiming = false;
-
+	private Vector3 weaponMainLocalPosition;
+	private Vector3 defaultWeaponPosition;
+	private float DefaultFoV;
 
 	private Rigidbody _rb;
 	private InputManager _inputManager;
@@ -39,6 +43,8 @@ public class PlayerBehaviour : NetworkBehaviour
 		_camTransform = GetComponentInChildren<Camera>().transform;
 		_virtualCamera = GetComponentInChildren<CinemachineVirtualCamera>();
 
+		DefaultFoV = _virtualCamera.m_Lens.FieldOfView;
+		defaultWeaponPosition = weaponSocket.localPosition;
 		if(!IsOwner)
 		{
 			_camTransform.gameObject.SetActive(false);
@@ -58,7 +64,7 @@ public class PlayerBehaviour : NetworkBehaviour
 		SwitchWeapon(true);
 	}
 
-	void Update()
+	private void Update()
 	{
 		if(IsGrounded() && _inputManager.PlayerJumped())
 			_hasJumped = true;
@@ -78,12 +84,12 @@ public class PlayerBehaviour : NetworkBehaviour
 			activeWeapon.StartReloadAnimation();
 			return;
 		}
-		isAiming = _inputManager.PlayerAimDownSight();
+		isAiming = _inputManager.PlayerHoldAimDownSight();
 
 		activeWeapon.HandleShootInputs(
 			_inputManager.PlayerFired(),
-			_inputManager.PlayerFired(),
-			!_inputManager.PlayerFired());
+			_inputManager.PlayerHoldDownFire(),
+			!_inputManager.PlayerCancelFire());
 
 		if (!isAiming && !activeWeapon.IsCharging)
 		{
@@ -95,7 +101,7 @@ public class PlayerBehaviour : NetworkBehaviour
 		}
 	}
 
-	void FixedUpdate()
+	private void FixedUpdate()
 	{
 		Vector3 forward = _camTransform.forward;
 		forward.y = 0;
@@ -112,8 +118,15 @@ public class PlayerBehaviour : NetworkBehaviour
 			_rb.AddForce(Vector3.up * jumpHeight, ForceMode.Acceleration);
 		}
 	}
-	
-	private bool AddWeapon(WeaponController weaponPrefab)
+
+    private void LateUpdate()
+    {
+        UpdateWeaponAiming();
+
+		weaponSocket.localPosition = weaponMainLocalPosition;
+    }
+
+    private bool AddWeapon(WeaponController weaponPrefab)
 	{
 		if (HasWeapon(weaponPrefab) != null)
 		{
@@ -195,11 +208,40 @@ public class PlayerBehaviour : NetworkBehaviour
 	{
 		if (newWeaponIndex != activeWeaponIndex && newWeaponIndex >= 0)
 		{
+			weaponMainLocalPosition = weaponSocket.localPosition;
 			weaponSlots[activeWeaponIndex].ShowWeapon(false);
 			weaponSlots[newWeaponIndex].ShowWeapon(true);
 			activeWeaponIndex = newWeaponIndex;
 		}
 	}
+
+	private void UpdateWeaponAiming()
+	{
+		WeaponController activeWeapon = weaponSlots[activeWeaponIndex];
+        if (isAiming && activeWeapon)
+        {
+			weaponMainLocalPosition = Vector3.Lerp(
+				weaponMainLocalPosition,
+				aimingWeaponSocket.localPosition + activeWeapon.AimOffset,
+				aimingAnimationSpeed * Time.deltaTime);
+
+			_virtualCamera.m_Lens.FieldOfView = Mathf.Lerp(
+				_virtualCamera.m_Lens.FieldOfView, 
+				activeWeapon.AimZoomRatio * DefaultFoV,
+				aimingAnimationSpeed * Time.deltaTime);
+		}
+		else
+		{
+			weaponMainLocalPosition = Vector3.Lerp(
+				weaponMainLocalPosition,
+				defaultWeaponPosition,
+				aimingAnimationSpeed * Time.deltaTime);
+			_virtualCamera.m_Lens.FieldOfView = Mathf.Lerp(
+				_virtualCamera.m_Lens.FieldOfView,
+				DefaultFoV,
+				aimingAnimationSpeed * Time.deltaTime);
+		}
+    }
 
 	private bool IsGrounded()
 	{
