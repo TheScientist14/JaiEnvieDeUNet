@@ -479,10 +479,7 @@ namespace Unity.FPS.Game
                 }
                 else
                 {
-                    ProjectileBase newProjectile = Instantiate(ProjectilePrefab, WeaponMuzzle.position,
-                    Quaternion.LookRotation(shotDirection));
-                    newProjectile.Shoot(this);
-                    newProjectile.GetComponent<NetworkObject>().Spawn();
+                    HandleShootRPC(shotDirection);
                 }
             }
 
@@ -522,6 +519,15 @@ namespace Unity.FPS.Game
 
             OnShoot?.Invoke();
             OnShootProcessed?.Invoke();
+        }
+
+        [ServerRpc(RequireOwnership = true)]
+        public void HandleShootRPC(Vector3 shotDirection)
+        {
+            ProjectileBase newProjectile = Instantiate(ProjectilePrefab, WeaponMuzzle.position,
+                Quaternion.LookRotation(shotDirection));
+            newProjectile.Shoot(this);
+            newProjectile.GetComponent<NetworkObject>().Spawn();
         }
 
         public Vector3 GetShotDirectionWithinSpread(Transform shootTransform)

@@ -137,17 +137,7 @@ public class PlayerBehaviour : NetworkBehaviour
 		{
 			if (weaponSlots[i] == null)
 			{
-				WeaponController weaponInstance = Instantiate(weaponPrefab, weaponSocket);
-				weaponInstance.transform.localPosition = Vector3.zero;
-				weaponInstance.transform.localRotation = Quaternion.identity;
-
-				weaponInstance.Owner = gameObject;
-				weaponInstance.SourcePrefab = weaponPrefab.gameObject;
-				weaponInstance.ShowWeapon(false);
-				weaponInstance.GetComponent<NetworkObject>().Spawn();
-
-				weaponSlots[i] = weaponInstance;
-
+				AddWeaponRPC(weaponPrefab, i);
 				return true;
 			}
 		}
@@ -157,6 +147,21 @@ public class PlayerBehaviour : NetworkBehaviour
         }
 
         return false;
+    }
+
+	[ServerRpc(RequireOwnership = true)]
+	private void AddWeaponRPC(WeaponController weaponPrefab, int i)
+	{
+        WeaponController weaponInstance = Instantiate(weaponPrefab, weaponSocket);
+        weaponInstance.transform.localPosition = Vector3.zero;
+        weaponInstance.transform.localRotation = Quaternion.identity;
+
+        weaponInstance.Owner = gameObject;
+        weaponInstance.SourcePrefab = weaponPrefab.gameObject;
+        weaponInstance.ShowWeapon(false);
+        weaponInstance.GetComponent<NetworkObject>().Spawn();
+
+        weaponSlots[i] = weaponInstance;
     }
 
 	private WeaponController HasWeapon(WeaponController weaponPrefab)
