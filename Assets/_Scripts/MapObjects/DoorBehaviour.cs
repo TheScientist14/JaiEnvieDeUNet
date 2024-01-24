@@ -8,16 +8,19 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 
-public class DoorBehaviour : MonoBehaviour
+public class DoorBehaviour : NetworkBehaviour
 {
     [SerializeField] private Transform positionToTp;
     [SerializeField] private bool isChangeScene = false;
     [SerializeField] [EnableIf("isChangeScene")] private string sceneToChangeTo;
     
     private GameObject PlayerToTP;
-
+    private bool sceneLoaded = false;
+    
     private void OnTriggerEnter(Collider other)
     {
+        if (!IsServer)return;
+        
         if (other.gameObject.CompareTag("Player"))
         {
             if (!isChangeScene)
@@ -25,9 +28,10 @@ public class DoorBehaviour : MonoBehaviour
                 PlayerToTP = other.gameObject;
                  TpPlayer();
             }
-            else
+            else if (!sceneLoaded)
             {
-                LoadBossSceneServerRPC();
+                PlayerToTP = other.gameObject;
+                LoadBossScene();
             }
         }
     }
@@ -36,21 +40,14 @@ public class DoorBehaviour : MonoBehaviour
     {
         PlayerToTP.transform.position = positionToTp.position;
         PlayerToTP.transform.rotation = positionToTp.rotation;
+        if (NetworkManager.Singleton.SceneManager != null)
+            NetworkManager.Singleton.SceneManager.OnLoadComplete -= (id, sceneName, mode) => TpPlayer();
     }
-
-    [ServerRpc]
-    private async void LoadBossSceneServerRPC()
+    
+    private void LoadBossScene()
     {
+        NetworkManager.Singleton.SceneManager.OnLoadComplete += (id, sceneName, mode) => TpPlayer();
+        NetworkManager.Singleton.SceneManager.LoadScene(sceneToChangeTo, LoadSceneMode.Additive);
         
-        var sceneEventProgressStatus = NetworkManager.Singleton.SceneManager.LoadScene(sceneToChangeTo, LoadSceneMode.Additive);
-
-        
-        if (sceneEventProgressStatus == SceneEventProgressStatus.InvalidSceneName) return;
-        if (sceneEventProgressStatus == SceneEventProgressStatus.InternalNetcodeError) return;
-        //if (sceneEventProgressStatus == SceneEventProgressStatus.SceneFailedVerification) return;
-            
-        while (sceneEventProgressStatus == SceneEventProgressStatus.SceneEventInProgress) await Task.Delay(10);
-        
-        TpPlayer();
     }
 }
