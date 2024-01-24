@@ -59,7 +59,7 @@ public class LobbyManager : Singleton<LobbyManager>
 	{
 		if(_lobby != null)
 		{
-			await LeaveLobby();
+			await LeaveLobbyAsync();
 		}
 	}
 
@@ -131,7 +131,7 @@ public class LobbyManager : Singleton<LobbyManager>
 			Debug.Log("Joining Server");
 			string ip;
 			ushort port;
-			if (_IsOwnerOfLobby)
+			if(_IsOwnerOfLobby)
 			{
 				ip = ServerIp;
 				port = ServerPort;
@@ -139,10 +139,10 @@ public class LobbyManager : Singleton<LobbyManager>
 			else
 			{
 				ip = _lobby.Data[k_ServerIp].Value;
-                			 port = ushort.Parse(_lobby.Data[k_ServerPort].Value);
+				port = ushort.Parse(_lobby.Data[k_ServerPort].Value);
 			}
-			
-			await LeaveLobby();
+
+			await LeaveLobbyAsync();
 
 			// init NGO client side
 			NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(ip, port);
@@ -227,7 +227,7 @@ public class LobbyManager : Singleton<LobbyManager>
 	public async void CreateLobby()
 	{
 		string lobbyName = _playerName + "'s Lobby";
-		int maxPlayers = 4;
+		int maxPlayers = 10;
 		CreateLobbyOptions options = new CreateLobbyOptions();
 		options.IsPrivate = false;
 		options.Player = GetPlayer();
@@ -375,7 +375,7 @@ public class LobbyManager : Singleton<LobbyManager>
 		ServerPort = ushort.Parse(assignment.Port.ToString());
 
 		_IsWaitingForTicket = false;
-        
+
 		JoinServer();
 	}
 
@@ -418,7 +418,12 @@ public class LobbyManager : Singleton<LobbyManager>
 		}
 	}
 
-	public async Task LeaveLobby()
+	public async void LeaveLobby()
+	{
+		await LeaveLobbyAsync();
+	}
+
+	public async Task LeaveLobbyAsync()
 	{
 		Debug.Log("LeavingLobby");
 
