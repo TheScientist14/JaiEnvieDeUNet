@@ -23,6 +23,12 @@ public class HealthComponent : NetworkBehaviour
 
 	public void TakeDamage(sbyte iDamage)
 	{
+		if(iDamage <= 0)
+			return;
+
+		if(iDamage >= m_Health.Value)
+			m_Health.Value = 0;
+
 		m_Health.Value -= iDamage;
 	}
 }
