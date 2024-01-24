@@ -257,12 +257,12 @@ namespace Unity.FPS.Gameplay
                     Destroy(impactVfxInstance.gameObject, ImpactVfxLifetime);
                 }
             }
-
-            // impact sfx
-            if (ImpactSfxClip)
-            {
-                AudioUtility.CreateSFX(ImpactSfxClip, point, AudioUtility.AudioGroups.Impact, 1f, 3f);
-            }
+            //
+            // // impact sfx
+            // if (ImpactSfxClip)
+            // {
+            //     AudioUtility.CreateSFX(ImpactSfxClip, point, AudioUtility.AudioGroups.Impact, 1f, 3f);
+            // }
 
             // Self Destruct
             Destroy(this.gameObject);

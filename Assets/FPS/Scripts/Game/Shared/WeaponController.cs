@@ -374,12 +374,14 @@ namespace Unity.FPS.Game
 
         public bool HandleShootInputs(bool inputDown, bool inputHeld, bool inputUp)
         {
+            
             m_WantsToShoot = inputDown || inputHeld;
             switch (ShootType)
             {
                 case WeaponShootType.Manual:
                     if (inputDown)
                     {
+                        Debug.Log("HandleShoot");
                         return TryShoot();
                     }
 
@@ -479,6 +481,7 @@ namespace Unity.FPS.Game
                 }
                 else
                 {
+                    Debug.Log("RPC shoot");
                     HandleShootServerRPC(shotDirection);
                 }
             }
@@ -526,8 +529,8 @@ namespace Unity.FPS.Game
         {
             ProjectileBase newProjectile = Instantiate(ProjectilePrefab, WeaponMuzzle.position,
                 Quaternion.LookRotation(shotDirection));
-            newProjectile.Shoot(this);
             newProjectile.GetComponent<NetworkObject>().Spawn();
+            newProjectile.Shoot(this);
         }
 
         public Vector3 GetShotDirectionWithinSpread(Transform shootTransform)

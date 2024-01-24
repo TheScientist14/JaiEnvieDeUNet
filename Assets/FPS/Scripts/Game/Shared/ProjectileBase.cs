@@ -16,10 +16,10 @@ namespace Unity.FPS.Game
 
         public void Shoot(WeaponController controller)
         {
-            if (!IsServer)
-            {
-                return;
-            }
+            // if (!IsServer)
+            // {
+            //     return;
+            // }
             Owner = controller.Owner;
             InitialPosition = transform.position;
             InitialDirection = transform.forward;

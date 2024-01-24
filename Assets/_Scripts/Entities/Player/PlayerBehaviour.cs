@@ -19,7 +19,7 @@ public class PlayerBehaviour : NetworkBehaviour
 	[SerializeField] private Transform weaponSocket;
 	[SerializeField] private Transform aimingWeaponSocket;
 	[SerializeField] private float aimingAnimationSpeed;
-	private WeaponController[] weaponSlots = new WeaponController[4];
+	[SerializeField] private WeaponController[] weaponSlots;
 	private int activeWeaponIndex = 0;
 	private bool isAiming = false;
 	private Vector3 weaponMainLocalPosition;
@@ -57,6 +57,11 @@ public class PlayerBehaviour : NetworkBehaviour
 		_virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_VerticalAxis.m_MaxSpeed = camSens.y * 0.01f;
 
 		InitWeaponsServerRPC();
+
+		foreach (var weaponController in weaponSlots)
+		{
+			weaponController.Owner = gameObject;
+		}
 		
 		SwitchWeapon(true);
 	}
@@ -95,7 +100,7 @@ public class PlayerBehaviour : NetworkBehaviour
 		activeWeapon.HandleShootInputs(
 			_inputManager.PlayerFired(),
 			_inputManager.PlayerHoldDownFire(),
-			!_inputManager.PlayerCancelFire());
+			_inputManager.PlayerCancelFire());
 
 		if (!isAiming && !activeWeapon.IsCharging)
 		{
