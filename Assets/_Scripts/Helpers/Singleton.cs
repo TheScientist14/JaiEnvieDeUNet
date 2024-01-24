@@ -5,21 +5,37 @@ using UnityEngine;
 
 public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
 {
+	public void Awake()
+	{
+		if(_instance != null && _instance.gameObject != gameObject)
+		{
+			Destroy(gameObject);
+			return;
+		}
+
+		_instance = GetComponent<T>();
+		DontDestroyOnLoad(_instance);
+	}
+
 	public static T instance
 	{
 		get
 		{
-			_instance ??= FindAnyObjectByType<T>() ?? new GameObject(typeof(T).Name + " " + nameof(Singleton<T>)).AddComponent<T>();
-
-			//DontDestroyOnLoad(_instance);
+			if(_instance != null)
+				_instance = new GameObject(typeof(T).Name + " " + nameof(Singleton<T>)).AddComponent<T>();
 
 			return _instance;
+		}
+		private set
+		{
+			_instance = value;
 		}
 	}
 	private static T _instance;
 
 	private void OnDestroy()
 	{
-		_instance = null;
+		if(_instance.gameObject == gameObject)
+			_instance = null;
 	}
 }
