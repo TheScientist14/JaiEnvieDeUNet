@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 
 public class InputManager : Singleton<InputManager>
@@ -37,5 +39,25 @@ public class InputManager : Singleton<InputManager>
 	public bool PlayerUsed()
 	{
 		return _inputs.Player.Use.triggered;
+	}
+
+	public bool PlayerFired()
+	{
+		return _inputs.Player.Fire.triggered;
+	}
+
+	public bool PlayerAimDownSight()
+	{
+		return _inputs.Player.Zoom.triggered;
+	}
+
+	public bool PlayerReload()
+	{
+		return _inputs.Player.Reload.triggered;
+	}
+
+	public float PlayerSwitchWeapon()
+	{
+		return _inputs.Player.SwitchWeapon.ReadValue<float>();
 	}
 }
