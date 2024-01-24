@@ -28,7 +28,7 @@ namespace Unity.FPS.Game
     }
 
     [RequireComponent(typeof(AudioSource))]
-    public class WeaponController : MonoBehaviour
+    public class WeaponController : NetworkBehaviour
     {
         [Header("Information")] [Tooltip("The name that will be displayed in the UI for this weapon")]
         public string WeaponName;
@@ -479,7 +479,7 @@ namespace Unity.FPS.Game
                 }
                 else
                 {
-                    HandleShootRPC(shotDirection);
+                    HandleShootServerRPC(shotDirection);
                 }
             }
 
@@ -522,7 +522,7 @@ namespace Unity.FPS.Game
         }
 
         [ServerRpc(RequireOwnership = true)]
-        public void HandleShootRPC(Vector3 shotDirection)
+        public void HandleShootServerRPC(Vector3 shotDirection)
         {
             ProjectileBase newProjectile = Instantiate(ProjectilePrefab, WeaponMuzzle.position,
                 Quaternion.LookRotation(shotDirection));

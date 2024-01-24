@@ -56,12 +56,18 @@ public class PlayerBehaviour : NetworkBehaviour
 		_virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_HorizontalAxis.m_MaxSpeed = camSens.x * 0.01f;
 		_virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_VerticalAxis.m_MaxSpeed = camSens.y * 0.01f;
 
+		InitWeaponsServerRPC();
+		
+		SwitchWeapon(true);
+	}
+
+	[ServerRpc(RequireOwnership = true)]
+	private void InitWeaponsServerRPC()
+	{
 		foreach(var weapon in weapons) 
 		{
 			AddWeapon(weapon);
 		}
-		
-		SwitchWeapon(true);
 	}
 
 	private void Update()
@@ -137,7 +143,7 @@ public class PlayerBehaviour : NetworkBehaviour
 		{
 			if (weaponSlots[i] == null)
 			{
-				AddWeaponRPC(weaponPrefab, i);
+				AddWeaponSpawn(weaponPrefab, i);
 				return true;
 			}
 		}
@@ -148,9 +154,8 @@ public class PlayerBehaviour : NetworkBehaviour
 
         return false;
     }
-
-	[ServerRpc(RequireOwnership = true)]
-	private void AddWeaponRPC(WeaponController weaponPrefab, int i)
+    
+	private void AddWeaponSpawn(WeaponController weaponPrefab, int i)
 	{
         WeaponController weaponInstance = Instantiate(weaponPrefab, weaponSocket);
         weaponInstance.transform.localPosition = Vector3.zero;
