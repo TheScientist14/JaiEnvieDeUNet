@@ -4,36 +4,38 @@ using UnityEngine;
 
 public class InputManager : Singleton<InputManager>
 {
-    private Inputs _inputs;
+	private Inputs _inputs;
 
-    private void Awake()
-    {
-        _inputs = new Inputs();
-        Cursor.visible = false;
-    }
+	protected override void Awake()
+	{
+		base.Awake();
 
-    private void OnEnable()
-    {
-        _inputs.Enable();
-    }
+		_inputs = new Inputs();
+		Cursor.visible = false;
+	}
 
-    private void OnDisable()
-    {
-        _inputs.Disable();
-    }
+	private void OnEnable()
+	{
+		_inputs.Enable();
+	}
 
-    public Vector2 GetPlayerMovement()
-    {
-        return _inputs.Player.Move.ReadValue<Vector2>();
-    }
+	private void OnDisable()
+	{
+		_inputs.Disable();
+	}
 
-    public bool PlayerJumped()
-    {
-        return _inputs.Player.Jump.triggered;
-    }
+	public Vector2 GetPlayerMovement()
+	{
+		return _inputs.Player.Move.ReadValue<Vector2>();
+	}
 
-    public bool PlayerUsed()
-    {
-        return _inputs.Player.Use.triggered;
-    }
+	public bool PlayerJumped()
+	{
+		return _inputs.Player.Jump.triggered;
+	}
+
+	public bool PlayerUsed()
+	{
+		return _inputs.Player.Use.triggered;
+	}
 }

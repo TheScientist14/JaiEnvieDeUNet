@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
 {
-	public void Awake()
+	protected virtual void Awake()
 	{
 		if(_instance != null && _instance.gameObject != gameObject)
 		{
@@ -33,7 +33,7 @@ public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
 	}
 	private static T _instance;
 
-	private void OnDestroy()
+	protected virtual void OnDestroy()
 	{
 		if(_instance.gameObject == gameObject)
 			_instance = null;

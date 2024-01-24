@@ -54,9 +54,10 @@ public class LobbyManager : Singleton<LobbyManager>
 		get => _lobby;
 	}
 
-
-	private async void OnDestroy()
+	protected override async void OnDestroy()
 	{
+		base.OnDestroy();
+
 		if(_lobby != null)
 		{
 			await LeaveLobbyAsync();
@@ -185,7 +186,6 @@ public class LobbyManager : Singleton<LobbyManager>
 		}
 	}
 
-
 	public async Task<QueryResponse> GetAllLobbies()
 	{
 		QueryResponse lobbies = null;
@@ -220,8 +220,6 @@ public class LobbyManager : Singleton<LobbyManager>
 
 		return lobbies;
 	}
-
-
 
 	[Button("CreateLobby")]
 	public async void CreateLobby()
