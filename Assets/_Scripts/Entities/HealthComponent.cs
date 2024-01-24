@@ -6,7 +6,9 @@ using UnityEngine.Events;
 
 public class HealthComponent : NetworkBehaviour
 {
-	private NetworkVariable<sbyte> m_Health;
+	public sbyte MaxHealth = 100;
+
+	private NetworkVariable<sbyte> m_Health = new NetworkVariable<sbyte>();
 
 	public UnityEvent OnDeath;
 
@@ -14,27 +16,50 @@ public class HealthComponent : NetworkBehaviour
 	{
 		if(OnDeath == null)
 			OnDeath = new UnityEvent();
+
+		m_Health.OnValueChanged += _CheckForDeath;
+	}
+
+	private void _CheckForDeath(sbyte iPrevVal, sbyte iCurVal)
+	{
+		if(iPrevVal > 0 && iCurVal <= 0)
+			OnDeath.Invoke();
 	}
 
 	// Start is called before the first frame update
 	void Start()
 	{
-		m_Health.Value = 100;
+		m_Health.Value = MaxHealth;
 	}
 
 	public void TakeDamage(sbyte iDamage)
 	{
+		if(!IsOwner && !IsServer)
+		{
+			TakeDamageServerRPC(iDamage);
+			return;
+		}
+
 		if(iDamage <= 0 || m_Health.Value <= 0)
 			return;
 
 		m_Health.Value -= (sbyte)Mathf.Min(iDamage, m_Health.Value);
-
-		if(m_Health.Value <= 0)
-			OnDeath.Invoke();
 	}
+
+	[ServerRpc]
+	private void TakeDamageServerRPC(sbyte iDamage)
+	{
+		TakeDamage(iDamage);
+	}
+
 
 	public sbyte GetHealth()
 	{
 		return m_Health.Value;
+	}
+
+	public void OnValueChanged(NetworkVariable<sbyte>.OnValueChangedDelegate iListener)
+	{
+		m_Health.OnValueChanged += iListener;
 	}
 }
