@@ -120,5 +120,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   positionToTp: {fileID: 0}
   isChangeScene: 0
-  sceneToChange:
-    m_Handle: 0
+  sceneToChangeTo: 

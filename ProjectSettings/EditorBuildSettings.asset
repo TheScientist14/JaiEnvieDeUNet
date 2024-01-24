@@ -12,7 +12,7 @@ EditorBuildSettings:
     path: Assets/Scenes/GamemodeSetup.unity
     guid: d9bb5ed4c0fd1cf4daa63dcf95fb60fc
   - enabled: 1
-    path: Assets/Scenes/PVE.unity
+    path: Assets/Scenes/PVE/PVE.unity
     guid: 871c777dc4b6f4948be7289fc13b6fd9
   - enabled: 1
     path: Assets/Scenes/TeamDeathmatch.unity
@@ -23,4 +23,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/KingOfTheHill.unity
     guid: 373ed85fdeeac4b45953913f33f96b6e
+  - enabled: 1
+    path: Assets/Scenes/PVE/BossRoom.unity
+    guid: 77c1cf7be05cff34388598aa2c9d0967
   m_configObjects: {}

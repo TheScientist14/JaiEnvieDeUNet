@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using NaughtyAttributes;
 using Unity.Netcode;
 using UnityEngine;
@@ -11,27 +12,45 @@ public class DoorBehaviour : MonoBehaviour
 {
     [SerializeField] private Transform positionToTp;
     [SerializeField] private bool isChangeScene = false;
-    [SerializeField] [EnableIf("isChangeScene")] private Scene sceneToChange;
+    [SerializeField] [EnableIf("isChangeScene")] private string sceneToChangeTo;
+    
+    private GameObject PlayerToTP;
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.CompareTag("Player"))
         {
             if (!isChangeScene)
-                    TpPlayer(other.gameObject);
+            {
+                PlayerToTP = other.gameObject;
+                 TpPlayer();
+            }
+            else
+            {
+                LoadBossSceneServerRPC();
+            }
         }
     }
     
-    private void TpPlayer(GameObject player)
+    private void TpPlayer()
     {
-        player.transform.position = positionToTp.position;
-        player.transform.rotation = positionToTp.rotation;
+        PlayerToTP.transform.position = positionToTp.position;
+        PlayerToTP.transform.rotation = positionToTp.rotation;
     }
 
-    private void ChangeScene()
+    [ServerRpc]
+    private async void LoadBossSceneServerRPC()
     {
-        //detect if all players are next to the door, and then change scene for all of them ?
-        // or have one player enter and on that trigger change scene for all players 
+        
+        var sceneEventProgressStatus = NetworkManager.Singleton.SceneManager.LoadScene(sceneToChangeTo, LoadSceneMode.Additive);
+
+        
+        if (sceneEventProgressStatus == SceneEventProgressStatus.InvalidSceneName) return;
+        if (sceneEventProgressStatus == SceneEventProgressStatus.InternalNetcodeError) return;
+        //if (sceneEventProgressStatus == SceneEventProgressStatus.SceneFailedVerification) return;
+            
+        while (sceneEventProgressStatus == SceneEventProgressStatus.SceneEventInProgress) await Task.Delay(10);
+        
+        TpPlayer();
     }
-    
 }

@@ -12,6 +12,8 @@ public class NetworkInit : NetworkBehaviour
 {
 	[SerializeField] private NetworkManager m_NetworkManagerPrefab;
 
+    private Gamemodes _gameMode;
+
 	// Start is called before the first frame update
 	async void Start()
 	{
@@ -44,13 +46,15 @@ public class NetworkInit : NetworkBehaviour
 		// works only for server
 		var payloadAllocation = await MultiplayService.Instance.GetPayloadAllocationFromJsonAs<MatchmakingResults>();
 
+        _gameMode = GetGameModeFromQueueName(payloadAllocation.QueueName);
+
 		if(payloadAllocation == null)
 			Debug.LogError("No allocation");
 
 		NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(
 			MultiplayService.Instance.ServerConfig.IpAddress, MultiplayService.Instance.ServerConfig.Port, "0.0.0.0");
 		NetworkManager.Singleton.StartServer();
-		NetworkManager.Singleton.SceneManager.SetClientSynchronizationMode(UnityEngine.SceneManagement.LoadSceneMode.Additive);
+		NetworkManager.Singleton.SceneManager.SetClientSynchronizationMode(LoadSceneMode.Additive);
 		Debug.Log("NGO initialized");
 
 		Application.targetFrameRate = 60;
@@ -59,18 +63,18 @@ public class NetworkInit : NetworkBehaviour
 		Debug.Log("Server is ready for players");
 	}
 
-	[Button("Start")]
-	public void OnClientStarted()
-	{
-		Debug.Log("Client started");
-
-		if(LobbyManager.instance.IsLobbyHost())
-		{
-			Debug.Log("Loading scene");
-			NetworkManager.Singleton.SceneManager.OnSceneEvent += SceneManager_OnSceneEvent;
-			LoadASceneServerRPC(LobbyManager.instance.GetGamemode().ToString());
-		}
-	}
+    [Button("Start")]
+    public void OnClientStarted()
+    {
+        Debug.Log("Client started");
+        
+        if(LobbyManager.instance.IsLobbyHost())
+        {
+            Debug.Log("Loading scene");
+            NetworkManager.Singleton.SceneManager.OnSceneEvent += SceneManager_OnSceneEvent;
+            LoadGameModeSceneServerRPC();
+        }
+    }
 
 	private void SceneManager_OnSceneEvent(SceneEvent sceneEvent)
 	{
@@ -184,8 +188,24 @@ public class NetworkInit : NetworkBehaviour
 	}
 
 	[ServerRpc(RequireOwnership = false)]
-	private void LoadASceneServerRPC(string iSceneName, ServerRpcParams serverRpcParams = default)
+	private void LoadGameModeSceneServerRPC(ServerRpcParams serverRpcParams = default)
 	{
-		NetworkManager.SceneManager.LoadScene(iSceneName, UnityEngine.SceneManagement.LoadSceneMode.Additive);
+		NetworkManager.SceneManager.LoadScene(_gameMode.ToString(), LoadSceneMode.Additive);
 	}
+
+
+    private Gamemodes GetGameModeFromQueueName(string queueName)
+    {
+        switch(queueName)
+        { 
+            default:
+                return Gamemodes.PVE;
+            case "TDMQueue":
+                return Gamemodes.TeamDeathmatch;
+            case "KotHQueue":
+                return Gamemodes.KingOfTheHill;
+            case "FfAQueue":
+                return Gamemodes.FFA;
+        }
+    }
 }
