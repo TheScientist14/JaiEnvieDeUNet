@@ -6,8 +6,9 @@ using UnityEngine.Events;
 
 public class HealthComponent : NetworkBehaviour
 {
-	NetworkVariable<sbyte> m_Health;
-	UnityEvent OnDeath;
+	private NetworkVariable<sbyte> m_Health;
+
+	public UnityEvent OnDeath;
 
 	private void Awake()
 	{
@@ -23,12 +24,17 @@ public class HealthComponent : NetworkBehaviour
 
 	public void TakeDamage(sbyte iDamage)
 	{
-		if(iDamage <= 0)
+		if(iDamage <= 0 || m_Health.Value <= 0)
 			return;
 
-		if(iDamage >= m_Health.Value)
-			m_Health.Value = 0;
+		m_Health.Value -= (sbyte)Mathf.Min(iDamage, m_Health.Value);
 
-		m_Health.Value -= iDamage;
+		if(m_Health.Value <= 0)
+			OnDeath.Invoke();
+	}
+
+	public sbyte GetHealth()
+	{
+		return m_Health.Value;
 	}
 }
