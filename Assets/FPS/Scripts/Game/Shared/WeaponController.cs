@@ -482,6 +482,7 @@ namespace Unity.FPS.Game
                     ProjectileBase newProjectile = Instantiate(ProjectilePrefab, WeaponMuzzle.position,
                     Quaternion.LookRotation(shotDirection));
                     newProjectile.Shoot(this);
+                    newProjectile.GetComponent<NetworkObject>().Spawn();
                 }
             }
 

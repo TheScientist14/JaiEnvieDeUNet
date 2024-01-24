@@ -144,6 +144,7 @@ public class PlayerBehaviour : NetworkBehaviour
 				weaponInstance.Owner = gameObject;
 				weaponInstance.SourcePrefab = weaponPrefab.gameObject;
 				weaponInstance.ShowWeapon(false);
+				weaponInstance.GetComponent<NetworkObject>().Spawn();
 
 				weaponSlots[i] = weaponInstance;
 
