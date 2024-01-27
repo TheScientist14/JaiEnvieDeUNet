@@ -15,17 +15,17 @@ public class PVEGameMode : CommonGameMode
 
 	private int _nextRoomNumber = 0;
 	
-	public PVEGameMode Instance()
+	public static PVEGameMode Instance()
 	{
 		return instance as PVEGameMode;
 	}
 
 	public void CheckEnemies()
 	{
-		foreach (var VARIABLE  in _waves[_nextRoomNumber-1]._enemiesToActivate)
+		foreach (var enemy  in _waves[_nextRoomNumber-1]._enemiesToActivate)
 		{
-			var enemy = VARIABLE.GetComponent<EnemyController>();
-			if (enemy && enemy.GetComponent<HealthComponent>().GetHealth() > 0)
+			EnemyController enemyController = enemy.GetComponent<EnemyController>();
+			if (enemyController && enemy.GetComponent<HealthComponent>().GetHealth() > 0)
 			{
 				return;
 			}
@@ -54,9 +54,12 @@ public class PVEGameMode : CommonGameMode
 
 	private void ActivateAllWaveBots(int waveNumber)
 	{
-		foreach (var waveEnemy in _waves[waveNumber]._enemiesToActivate)
+		if (waveNumber <= _waves.Count)
 		{
-			waveEnemy.SetActive(true);
+			foreach (var waveEnemy in _waves[waveNumber]._enemiesToActivate)
+            {
+            	waveEnemy.SetActive(true);
+            }
 		}
 	}
 	

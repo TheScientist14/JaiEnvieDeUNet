@@ -27,6 +27,7 @@ public class HealthComponent : NetworkBehaviour
 	private void _CheckForDeath(sbyte iPrevVal, sbyte iCurVal)
 	{
 		if(iPrevVal > 0 && iCurVal <= 0)
+			PVEGameMode.Instance().CheckEnemies();
 			OnDeath.Invoke();
 	}
 
