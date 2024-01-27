@@ -216,7 +216,6 @@ namespace Unity.FPS.AI
             {
                 while (_timeSinceLastDetection < TimerToLoseDetection)
                 {
-                    Debug.Log("Timesincelastdetection: " + _timeSinceLastDetection);
                     _timeSinceLastDetection += Time.deltaTime;
                     yield return null;
                 }
@@ -230,7 +229,6 @@ namespace Unity.FPS.AI
             {
                 while (_timeSinceLastDetectionOnHit < TimerToLoseDetectionOnHit)
                 {
-                    Debug.Log("Timesincelastdetectiononhit: " + _timeSinceLastDetectionOnHit);
                     _timeSinceLastDetectionOnHit += Time.deltaTime;
                     yield return null;
                 }
