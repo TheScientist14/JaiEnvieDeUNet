@@ -216,7 +216,9 @@ namespace Unity.FPS.AI
             {
                 while (_timeSinceLastDetection < TimerToLoseDetection)
                 {
+                    Debug.Log("Timesincelastdetection: " + _timeSinceLastDetection);
                     _timeSinceLastDetection += Time.deltaTime;
+                    yield return null;
                 }
                 _detectedTarget = false;
                 _timeSinceLastDetection = 0.0f;
@@ -228,7 +230,9 @@ namespace Unity.FPS.AI
             {
                 while (_timeSinceLastDetectionOnHit < TimerToLoseDetectionOnHit)
                 {
+                    Debug.Log("Timesincelastdetectiononhit: " + _timeSinceLastDetectionOnHit);
                     _timeSinceLastDetectionOnHit += Time.deltaTime;
+                    yield return null;
                 }
                 _detectedTargetOnHit = false;
                 _timeSinceLastDetectionOnHit = 0.0f;
@@ -241,7 +245,6 @@ namespace Unity.FPS.AI
                 {
                     if (collider.TryGetComponent(out PlayerBehaviour playerBehaviour))
                     {
-                        _timeSinceLastDetection = 0.0f;
                         KnownDetectedTarget = playerBehaviour.gameObject;
                         _detectedTarget = true;
                         OnDetectedTarget();
@@ -324,19 +327,21 @@ namespace Unity.FPS.AI
 
         void OnDamaged(int damage)
         {
-           onDamaged?.Invoke();
-           m_LastTimeDamaged = Time.time;
+            if (!_detectedTargetOnHit)
+            {
+                _detectedTargetOnHit = true;
+                KnownDetectedTarget = DamagingPlayer;
+                OnDetectedTarget();
+            }
 
-           if (_timeSinceLastDetectionOnHit >= TimerToLoseDetectionOnHit || Mathf.Approximately(_timeSinceLastDetection, 0.0f))
-           {
-               KnownDetectedTarget = DamagingPlayer;
-           }
+            onDamaged?.Invoke();
+            m_LastTimeDamaged = Time.time;
            
-           // play the damage tick sound
-           if (DamageTick && !m_WasDamagedThisFrame)
-               //AudioUtility.CreateSFX(DamageTick, transform.position, AudioUtility.AudioGroups.DamageTick, 0f);
+            // play the damage tick sound
+            if (DamageTick && !m_WasDamagedThisFrame)
+                //AudioUtility.CreateSFX(DamageTick, transform.position, AudioUtility.AudioGroups.DamageTick, 0f);
         
-           m_WasDamagedThisFrame = true;
+             m_WasDamagedThisFrame = true;
         
         }
 
