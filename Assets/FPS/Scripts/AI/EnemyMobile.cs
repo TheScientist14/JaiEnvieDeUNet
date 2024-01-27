@@ -46,7 +46,6 @@ namespace Unity.FPS.AI
             m_EnemyController.onAttack += OnAttack;
             m_EnemyController.onDetectedTarget += OnDetectedTarget;
             m_EnemyController.onLostTarget += OnLostTarget;
-            m_EnemyController.SetPathDestinationToClosestNode();
             m_EnemyController.onDamaged += OnDamaged;
 
             // Start patrolling
@@ -81,7 +80,7 @@ namespace Unity.FPS.AI
             {
                 case AIState.Follow:
                     // Transition to attack when there is a line of sight to the target
-                    if (m_EnemyController.IsSeeingTarget && m_EnemyController.IsTargetInAttackRange)
+                    if (m_EnemyController.IsTargetInAttackRange)
                     {
                         AiState = AIState.Attack;
                         m_EnemyController.SetNavDestination(transform.position);
@@ -115,8 +114,8 @@ namespace Unity.FPS.AI
                     break;
                 case AIState.Attack:
                     if (Vector3.Distance(m_EnemyController.KnownDetectedTarget.transform.position,
-                            m_EnemyController.DetectionModule.DetectionSourcePoint.position)
-                        >= (AttackStopDistanceRatio * m_EnemyController.DetectionModule.AttackRange))
+                            transform.position)
+                        >= (AttackStopDistanceRatio * m_EnemyController.AttackRange))
                     {
                         m_EnemyController.SetNavDestination(m_EnemyController.KnownDetectedTarget.transform.position);
                     }

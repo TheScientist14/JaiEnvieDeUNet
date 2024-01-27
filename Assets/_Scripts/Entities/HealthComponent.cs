@@ -12,10 +12,14 @@ public class HealthComponent : NetworkBehaviour
 
 	public UnityEvent OnDeath;
 
+	public UnityEvent<int> OnDamaged;
+
 	private void Awake()
 	{
 		if(OnDeath == null)
 			OnDeath = new UnityEvent();
+		if(OnDamaged == null)
+			OnDamaged = new UnityEvent<int>();
 
 		m_Health.OnValueChanged += _CheckForDeath;
 	}
@@ -44,6 +48,7 @@ public class HealthComponent : NetworkBehaviour
 			return;
 
 		m_Health.Value -= (sbyte)Mathf.Min(iDamage, m_Health.Value);
+		OnDamaged.Invoke(iDamage);
 	}
 
 	[ServerRpc]

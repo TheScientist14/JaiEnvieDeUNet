@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Unity.FPS.AI;
 using Unity.FPS.Game;
 using UnityEngine;
 
@@ -249,6 +250,10 @@ namespace Unity.FPS.Gameplay
                 HealthComponent healthComponent = collider.GetComponent<HealthComponent>();
                 if (healthComponent)
                 {
+                    if (collider.TryGetComponent(out EnemyController EC))
+                    {
+                        EC.DamagingPlayer = m_ProjectileBase.Owner;
+                    }
                     healthComponent.TakeDamage((sbyte)Damage);
                 }
             }
