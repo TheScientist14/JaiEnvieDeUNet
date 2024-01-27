@@ -35,8 +35,8 @@ public class PVEGameMode : CommonGameMode
 			door.ToggleDoor();
 		}
 
-		ActivateAllWaveBotsClientRpc(0);
-		ActivateAllWaveBots(0);
+		// ActivateAllWaveBotsClientRpc(0);
+		// ActivateAllWaveBots(0);
 
 	}
 

@@ -137,7 +137,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2015434656898269652, guid: 25a1b0efadb966e44889fce712c8ff8d, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2015434656898269656, guid: 25a1b0efadb966e44889fce712c8ff8d, type: 3}
       propertyPath: m_LocalPosition.x
@@ -344,7 +344,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2015434656898269652, guid: 25a1b0efadb966e44889fce712c8ff8d, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2015434656898269656, guid: 25a1b0efadb966e44889fce712c8ff8d, type: 3}
       propertyPath: m_LocalPosition.x
@@ -723,13 +723,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 320366457750320503, guid: 25a1b0efadb966e44889fce712c8ff8d, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2015434656898269652, guid: 25a1b0efadb966e44889fce712c8ff8d, type: 3}
       propertyPath: m_Name
       value: Enemy_HoverBot
       objectReference: {fileID: 0}
     - target: {fileID: 2015434656898269652, guid: 25a1b0efadb966e44889fce712c8ff8d, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2015434656898269656, guid: 25a1b0efadb966e44889fce712c8ff8d, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1088,7 +1092,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2015434656898269652, guid: 25a1b0efadb966e44889fce712c8ff8d, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2015434656898269656, guid: 25a1b0efadb966e44889fce712c8ff8d, type: 3}
       propertyPath: m_LocalPosition.x
