@@ -524,7 +524,7 @@ namespace Unity.FPS.Game
             OnShootProcessed?.Invoke();
         }
 
-        [ServerRpc(RequireOwnership = true)]
+        [ServerRpc(RequireOwnership = false)]
         public void HandleShootServerRPC(Vector3 shotDirection, Vector3 shotPosition)
         {
             DebugClientRPC();
