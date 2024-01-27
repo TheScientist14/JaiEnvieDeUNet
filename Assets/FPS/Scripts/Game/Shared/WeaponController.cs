@@ -527,10 +527,18 @@ namespace Unity.FPS.Game
         [ServerRpc(RequireOwnership = true)]
         public void HandleShootServerRPC(Vector3 shotDirection)
         {
+            DebugClientRPC();
+            Debug.Log($"PROJPREF : {ProjectilePrefab.name} || {WeaponMuzzle.position.ToString()} || {gameObject.name}");
             ProjectileBase newProjectile = Instantiate(ProjectilePrefab, WeaponMuzzle.position,
                 Quaternion.LookRotation(shotDirection));
             newProjectile.GetComponent<NetworkObject>().Spawn();
             newProjectile.Shoot(this);
+        }
+
+        [ClientRpc]
+        private void DebugClientRPC()
+        {
+            Debug.Log($"PROJPREF : {ProjectilePrefab.name} || {WeaponMuzzle.position.ToString()} || {gameObject.name}");
         }
 
         public Vector3 GetShotDirectionWithinSpread(Transform shootTransform)
@@ -578,8 +586,8 @@ namespace Unity.FPS.Game
                 AudioUtility.CreateSFX(ImpactSfxClip, point, AudioUtility.AudioGroups.Impact, 1f, 3f);
             }
 
-            // Self Destruct
-            Destroy(this.gameObject);
+            // // Self Destruct
+            // Destroy(this.gameObject);
         }
 
     }

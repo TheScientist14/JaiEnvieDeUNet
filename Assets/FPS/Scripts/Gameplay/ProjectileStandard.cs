@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using Unity.FPS.AI;
 using Unity.FPS.Game;
 using Unity.Netcode;
@@ -76,7 +77,14 @@ namespace Unity.FPS.Gameplay
 
             m_ProjectileBase.OnShoot += OnShoot;
 
-            Destroy(gameObject, MaxLifeTime);
+            StartCoroutine(NetworkDestroyWithDelay(gameObject.GetComponent<NetworkObject>(), MaxLifeTime));
+            //Destroy(gameObject, MaxLifeTime);
+        }
+
+        private IEnumerator NetworkDestroyWithDelay(NetworkObject networkObject, float seconds)
+        {
+            yield return new WaitForSeconds(seconds);
+            networkObject.Despawn();
         }
 
         new void OnShoot()
