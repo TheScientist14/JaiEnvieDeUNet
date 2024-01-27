@@ -58,7 +58,7 @@ public class PlayerBehaviour : NetworkBehaviour
 		_virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_HorizontalAxis.m_MaxSpeed = camSens.x * 0.01f;
 		_virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_VerticalAxis.m_MaxSpeed = camSens.y * 0.01f;
 
-		InitWeaponsServerRPC();
+		//InitWeaponsServerRPC();
 
 		foreach (var weaponController in weaponSlots)
 		{
