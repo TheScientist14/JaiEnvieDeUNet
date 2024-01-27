@@ -1,5 +1,7 @@
-﻿using UnityEngine;
+﻿using NaughtyAttributes;
+using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 
 namespace Unity.FPS.Game
 {

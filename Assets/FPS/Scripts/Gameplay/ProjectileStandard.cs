@@ -239,11 +239,17 @@ namespace Unity.FPS.Gameplay
             }
             else
             {
-                // point damage
-                Damageable damageable = collider.GetComponent<Damageable>();
-                if (damageable)
+                // point damage THIS IS OLD CODE
+                // Damageable damageable = collider.GetComponent<Damageable>();
+                // if (damageable)
+                // {
+                //     damageable.InflictDamage(Damage, false, m_ProjectileBase.Owner);
+                // }
+
+                HealthComponent healthComponent = collider.GetComponent<HealthComponent>();
+                if (healthComponent)
                 {
-                    damageable.InflictDamage(Damage, false, m_ProjectileBase.Owner);
+                    healthComponent.TakeDamage((sbyte)Damage);
                 }
             }
 

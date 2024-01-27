@@ -17,29 +17,27 @@ namespace Unity.FPS.Game
         public void InflictDamageInArea(float damage, Vector3 center, LayerMask layers,
             QueryTriggerInteraction interaction, GameObject owner)
         {
-            Dictionary<Health, Damageable> uniqueDamagedHealths = new Dictionary<Health, Damageable>();
+            List<HealthComponent> uniqueHealthComponents = new List<HealthComponent>();
 
             // Create a collection of unique health components that would be damaged in the area of effect (in order to avoid damaging a same entity multiple times)
             Collider[] affectedColliders = Physics.OverlapSphere(center, AreaOfEffectDistance, layers, interaction);
             foreach (var coll in affectedColliders)
             {
-                Damageable damageable = coll.GetComponent<Damageable>();
-                if (damageable)
+                HealthComponent healthComponent = coll.GetComponent<HealthComponent>();
+                if (healthComponent)
                 {
-                    Health health = damageable.GetComponentInParent<Health>();
-                    if (health && !uniqueDamagedHealths.ContainsKey(health))
+                    if (!uniqueHealthComponents.Contains(healthComponent))
                     {
-                        uniqueDamagedHealths.Add(health, damageable);
+                        uniqueHealthComponents.Add(healthComponent);
                     }
                 }
             }
 
             // Apply damages with distance falloff
-            foreach (Damageable uniqueDamageable in uniqueDamagedHealths.Values)
+            foreach (HealthComponent uniqueHealthComponent in uniqueHealthComponents)
             {
-                float distance = Vector3.Distance(uniqueDamageable.transform.position, transform.position);
-                uniqueDamageable.InflictDamage(
-                    damage * DamageRatioOverDistance.Evaluate(distance / AreaOfEffectDistance), true, owner);
+                float distance = Vector3.Distance(uniqueHealthComponent.transform.position, transform.position);
+                uniqueHealthComponent.TakeDamage((sbyte)(damage * DamageRatioOverDistance.Evaluate(distance / AreaOfEffectDistance)));
             }
         }
 

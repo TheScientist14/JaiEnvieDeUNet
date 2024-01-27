@@ -61,6 +61,7 @@ public class PlayerBehaviour : NetworkBehaviour
 		foreach (var weaponController in weaponSlots)
 		{
 			weaponController.Owner = gameObject;
+			weaponController.ShowWeapon(false);
 		}
 		
 		SwitchWeapon(true);
