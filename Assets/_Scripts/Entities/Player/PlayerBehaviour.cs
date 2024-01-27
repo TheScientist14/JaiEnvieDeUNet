@@ -46,17 +46,15 @@ public class PlayerBehaviour : NetworkBehaviour
 
 		DefaultFoV = _virtualCamera.m_Lens.FieldOfView;
 		defaultWeaponPosition = weaponSocket.localPosition;
-		if(!IsOwner)
+		if(!IsOwner && !IsServer)
 		{
 			_camTransform.gameObject.SetActive(false);
 			_virtualCamera.gameObject.SetActive(false);
 			canvas.gameObject.SetActive(false);
 			
-			if (!IsServer)
-			{
-				Destroy(this);
-				return;
-			}
+			Destroy(this);
+			return;
+			
 		}
 		else
 		{
