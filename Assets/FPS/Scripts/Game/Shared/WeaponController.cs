@@ -482,7 +482,7 @@ namespace Unity.FPS.Game
                 else
                 {
                     Debug.Log("RPC shoot");
-                    HandleShootServerRPC(shotDirection);
+                    HandleShootServerRPC(shotDirection, WeaponMuzzle.position);
                 }
             }
 
@@ -525,11 +525,11 @@ namespace Unity.FPS.Game
         }
 
         [ServerRpc(RequireOwnership = true)]
-        public void HandleShootServerRPC(Vector3 shotDirection)
+        public void HandleShootServerRPC(Vector3 shotDirection, Vector3 shotPosition)
         {
             DebugClientRPC();
-            Debug.Log($"PROJPREF : {ProjectilePrefab.name} || {WeaponMuzzle.position.ToString()} || {gameObject.name}");
-            ProjectileBase newProjectile = Instantiate(ProjectilePrefab, WeaponMuzzle.position,
+            Debug.Log($"PROJPREF : {ProjectilePrefab.name} || {shotPosition} || {gameObject.name}");
+            ProjectileBase newProjectile = Instantiate(ProjectilePrefab, shotPosition,
                 Quaternion.LookRotation(shotDirection));
             newProjectile.GetComponent<NetworkObject>().Spawn();
             newProjectile.Shoot(this);
