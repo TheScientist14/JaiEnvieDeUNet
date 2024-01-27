@@ -1031,7 +1031,7 @@ MonoBehaviour:
   UseQuaternionSynchronization: 0
   UseQuaternionCompression: 0
   UseHalfFloatPrecision: 0
-  InLocalSpace: 1
+  InLocalSpace: 0
   Interpolate: 0
   SlerpPosition: 0
 --- !u!114 &6044615132025911708 stripped
@@ -1153,7 +1153,7 @@ MonoBehaviour:
   UseQuaternionSynchronization: 0
   UseQuaternionCompression: 0
   UseHalfFloatPrecision: 0
-  InLocalSpace: 1
+  InLocalSpace: 0
   Interpolate: 0
   SlerpPosition: 0
 --- !u!1001 &3235578585776259578
@@ -1415,7 +1415,7 @@ MonoBehaviour:
   UseQuaternionSynchronization: 0
   UseQuaternionCompression: 0
   UseHalfFloatPrecision: 0
-  InLocalSpace: 1
+  InLocalSpace: 0
   Interpolate: 0
   SlerpPosition: 0
 --- !u!114 &5431991914613151061 stripped
@@ -1521,7 +1521,7 @@ MonoBehaviour:
   UseQuaternionSynchronization: 0
   UseQuaternionCompression: 0
   UseHalfFloatPrecision: 0
-  InLocalSpace: 1
+  InLocalSpace: 0
   Interpolate: 0
   SlerpPosition: 0
 --- !u!114 &4016624196166863617 stripped
