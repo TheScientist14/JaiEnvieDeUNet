@@ -54,7 +54,7 @@ public class PVPGameMode : CommonGameMode
 			return;
 
 		NativeList<int> playersIdx = new NativeList<int>();
-		playersIdx.InsertRangeWithBeginEnd(0, m_Players.Count);
+		playersIdx.InsertRangeWithBeginEnd(0, m_Players.Value.Length);
 		playersIdx.Shuffle();
 		m_ShuffledPlayerIndices.Value = playersIdx;
 	}
