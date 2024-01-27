@@ -7,16 +7,25 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 
+[RequireComponent(typeof(BoxCollider))]
 public class DoorBehaviour : NetworkBehaviour
 {
     [SerializeField] private Transform positionToTp;
     [SerializeField] private bool isChangeScene = false;
     [SerializeField] [EnableIf("isChangeScene")] private string sceneToChangeTo;
+
+    private BoxCollider _collider;
     
     private GameObject PlayerToTP;
     private bool sceneLoaded = false;
-    
+
+    private void Start()
+    {
+        _collider = GetComponent<BoxCollider>();
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (!IsServer)return;
@@ -34,6 +43,11 @@ public class DoorBehaviour : NetworkBehaviour
                 LoadBossScene();
             }
         }
+    }
+
+    private void ToggleDoor()
+    {
+        _collider.enabled = !_collider.enabled;
     }
     
     private void TpPlayer()
