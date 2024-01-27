@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Unity.FPS.Game;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Events;
@@ -9,7 +10,7 @@ using UnityEngine.Events;
 namespace Unity.FPS.AI
 {
     [RequireComponent(typeof(NavMeshAgent))]
-    public class EnemyController : MonoBehaviour
+    public class EnemyController : NetworkBehaviour
     {
         [System.Serializable]
         public struct RendererIndexData
@@ -349,14 +350,20 @@ namespace Unity.FPS.AI
             var vfx = Instantiate(DeathVfx, DeathVfxSpawnPoint.position, Quaternion.identity);
             Destroy(vfx, 5f);
 
-            // loot an object
-            if (TryDropItem())
+            if (IsServer)
             {
-                Instantiate(LootPrefab, transform.position, Quaternion.identity);
+                 // loot an object
+                 if (TryDropItem())
+                 {
+                     NetworkObject loot = Instantiate(LootPrefab, transform.position, Quaternion.identity).GetComponent<NetworkObject>();
+                     loot.Spawn();
+                 }
+                 // this will call the OnDestroy function
+                 //Destroy(gameObject, DeathDuration);
+                            
+                 gameObject.GetComponent<NetworkObject>().Despawn();
             }
-
-            // this will call the OnDestroy function
-            Destroy(gameObject, DeathDuration);
+           
         }
 
         void OnDrawGizmosSelected()

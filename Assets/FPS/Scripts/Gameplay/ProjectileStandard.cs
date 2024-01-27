@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Unity.FPS.AI;
 using Unity.FPS.Game;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace Unity.FPS.Gameplay
@@ -276,7 +277,10 @@ namespace Unity.FPS.Gameplay
             // }
 
             // Self Destruct
-            Destroy(this.gameObject);
+            if (IsServer)
+                GetComponent<NetworkObject>().Despawn();
+            
+            //Destroy(this.gameObject);
         }
 
         void OnDrawGizmosSelected()

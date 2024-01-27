@@ -34,8 +34,10 @@ public class PVPGameMode : CommonGameMode
 		return instance as PVPGameMode;
 	}
 
-	public void Start()
+	public override void Awake()
 	{
+		base.Awake();
+		
 		m_ShuffledPlayerIndices.OnValueChanged += _DispatchPlayersAction;
 		m_NbTeam.OnValueChanged += _DispatchPlayersAction;
 	}

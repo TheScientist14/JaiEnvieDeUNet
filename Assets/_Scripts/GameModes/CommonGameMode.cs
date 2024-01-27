@@ -14,15 +14,14 @@ public class CommonGameMode : NetworkSingleton<CommonGameMode>
 
 	public UnityEvent AllPlayersConnected;
 
-	public void Awake()
+	public virtual void Awake()
 	{
 		if(AllPlayersConnected == null)
 			AllPlayersConnected = new UnityEvent();
 
 		m_NbConnectedPlayers.OnValueChanged += CheckForAllPlayersConnected;
 		AllPlayersConnected.AddListener(OnAllPlayersConnected);
-
-		m_NbConnectedPlayers.Value = NetworkManager.Singleton.ConnectedClientsIds.Count;
+		
 	}
 
 	private void CheckForAllPlayersConnected(int iPrevVal, int iCurVal)
@@ -37,7 +36,9 @@ public class CommonGameMode : NetworkSingleton<CommonGameMode>
 
 		if(IsServer)
 		{
-
+			
+			m_NbConnectedPlayers.Value = NetworkManager.Singleton.ConnectedClientsIds.Count;
+			
 			foreach (var player in NetworkInit.s_PayloadAllocation.MatchProperties.Players)
 			{
 				m_Players.Add(new FixedString32Bytes(
