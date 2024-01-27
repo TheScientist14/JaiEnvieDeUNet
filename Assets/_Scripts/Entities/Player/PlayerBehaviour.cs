@@ -42,6 +42,7 @@ public class PlayerBehaviour : NetworkBehaviour
 		_inputManager = InputManager.instance;
 		_camTransform = GetComponentInChildren<Camera>().transform;
 		_virtualCamera = GetComponentInChildren<CinemachineVirtualCamera>();
+		var canvas = GetComponentInChildren<Canvas>();
 
 		DefaultFoV = _virtualCamera.m_Lens.FieldOfView;
 		defaultWeaponPosition = weaponSocket.localPosition;
@@ -49,6 +50,7 @@ public class PlayerBehaviour : NetworkBehaviour
 		{
 			_camTransform.gameObject.SetActive(false);
 			_virtualCamera.gameObject.SetActive(false);
+			canvas.gameObject.SetActive(false);
 			Destroy(this);
 			return;
 		}
@@ -64,7 +66,9 @@ public class PlayerBehaviour : NetworkBehaviour
 			weaponController.ShowWeapon(false);
 		}
 		
-		SwitchWeapon(true);
+		weaponSlots[activeWeaponIndex].ShowWeapon(true);
+		
+		//SwitchWeapon(true);
 	}
 
 	[ServerRpc(RequireOwnership = true)]
