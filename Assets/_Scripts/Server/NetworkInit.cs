@@ -12,7 +12,9 @@ public class NetworkInit : NetworkBehaviour
 {
 	[SerializeField] private NetworkManager m_NetworkManagerPrefab;
 
-    private Gamemodes _gameMode;
+	private Gamemodes _gameMode;
+
+	public static MatchmakingResults s_PayloadAllocation; // available only on server
 
 	// Start is called before the first frame update
 	async void Start()
@@ -44,11 +46,11 @@ public class NetworkInit : NetworkBehaviour
 		Debug.Log("Unity services initialized");
 
 		// works only for server
-		var payloadAllocation = await MultiplayService.Instance.GetPayloadAllocationFromJsonAs<MatchmakingResults>();
+		s_PayloadAllocation = await MultiplayService.Instance.GetPayloadAllocationFromJsonAs<MatchmakingResults>();
 
-        _gameMode = GetGameModeFromQueueName(payloadAllocation.QueueName);
+		_gameMode = GetGameModeFromQueueName(s_PayloadAllocation.QueueName);
 
-		if(payloadAllocation == null)
+		if(s_PayloadAllocation == null)
 			Debug.LogError("No allocation");
 
 		NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(
@@ -63,18 +65,18 @@ public class NetworkInit : NetworkBehaviour
 		Debug.Log("Server is ready for players");
 	}
 
-    [Button("Start")]
-    public void OnClientStarted()
-    {
-        Debug.Log("Client started");
-        
-        if(LobbyManager.instance.IsLobbyHost())
-        {
-            Debug.Log("Loading scene");
-            NetworkManager.Singleton.SceneManager.OnSceneEvent += SceneManager_OnSceneEvent;
-            LoadGameModeSceneServerRPC();
-        }
-    }
+	[Button("Start")]
+	public void OnClientStarted()
+	{
+		Debug.Log("Client started");
+
+		if(LobbyManager.instance.IsLobbyHost())
+		{
+			Debug.Log("Loading scene");
+			NetworkManager.Singleton.SceneManager.OnSceneEvent += SceneManager_OnSceneEvent;
+			LoadGameModeSceneServerRPC();
+		}
+	}
 
 	private void SceneManager_OnSceneEvent(SceneEvent sceneEvent)
 	{
@@ -193,19 +195,18 @@ public class NetworkInit : NetworkBehaviour
 		NetworkManager.SceneManager.LoadScene(_gameMode.ToString(), LoadSceneMode.Additive);
 	}
 
-
-    private Gamemodes GetGameModeFromQueueName(string queueName)
-    {
-        switch(queueName)
-        { 
-            default:
-                return Gamemodes.PVE;
-            case "TDMQueue":
-                return Gamemodes.TeamDeathmatch;
-            case "KotHQueue":
-                return Gamemodes.KingOfTheHill;
-            case "FfAQueue":
-                return Gamemodes.FFA;
-        }
-    }
+	public static Gamemodes GetGameModeFromQueueName(string queueName)
+	{
+		switch(queueName)
+		{
+			default:
+				return Gamemodes.PVE;
+			case "TDMQueue":
+				return Gamemodes.TeamDeathmatch;
+			case "KotHQueue":
+				return Gamemodes.KingOfTheHill;
+			case "FfAQueue":
+				return Gamemodes.FFA;
+		}
+	}
 }

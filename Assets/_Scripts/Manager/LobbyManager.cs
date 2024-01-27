@@ -262,14 +262,14 @@ public class LobbyManager : Singleton<LobbyManager>
 		_IsWaitingForTicket = true;
 
 		List<PlayerM> players = new List<PlayerM>();
-		foreach (Player player in _lobby.Players)
-		{ 
-			players.Add(new PlayerM(player.Id,new Dictionary<string, object>
-			{ 
+		foreach(Player player in _lobby.Players)
+		{
+			players.Add(new PlayerM(player.Id, new Dictionary<string, string>
+			{
 				{"Name", player.Data["Name"].Value}
 			}));
 		}
-		
+
 
 		// Set options for matchmaking
 		var options = new CreateTicketOptions(

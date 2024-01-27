@@ -6,26 +6,25 @@ using UnityEngine;
 
 public class PVEGameMode : CommonGameMode
 {
+	public static PVEGameMode Instance()
+	{
+		return instance as PVEGameMode;
+	}
 
-    public static PVEGameMode Instance()
-    {
-        return instance as PVEGameMode;
-    }
-    
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+	// Start is called before the first frame update
+	void Start()
+	{
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+	}
 
-    private void Init()
-    {
-        
-    }
+	// Update is called once per frame
+	void Update()
+	{
+
+	}
+
+	private void Init()
+	{
+
+	}
 }
