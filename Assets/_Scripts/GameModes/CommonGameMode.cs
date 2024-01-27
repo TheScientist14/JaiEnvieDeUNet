@@ -63,14 +63,15 @@ public class CommonGameMode : NetworkSingleton<CommonGameMode>
 	[ClientRpc]
 	void _RegisterClientRpc(ulong iClientId, ClientRpcParams iClientRpcParams)
 	{
-		if(!IsClient || !IsLocalPlayer || OwnerClientId != iClientId)
+		Debug.Log($"Registering client to server {NetworkManager.Singleton.LocalClient.ClientId} || {iClientId}");
+		if(!IsClient || NetworkManager.Singleton.LocalClient.ClientId != iClientId)
 			return;
 
-		Debug.Log("Registering client to server");
+		Debug.Log("Registering client to server but different");
 		_ReceiveClientInfoServerRpc(iClientId, new FixedString32Bytes(LobbyManager.instance.PlayerName));
 	}
 
-	[ServerRpc]
+	[ServerRpc(RequireOwnership = false)]
 	void _ReceiveClientInfoServerRpc(ulong iPlayerId, FixedString32Bytes iPlayerName)
 	{
 		m_PlayerIds.Add(iPlayerId);
