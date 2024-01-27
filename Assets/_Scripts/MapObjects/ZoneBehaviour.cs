@@ -61,7 +61,7 @@ public class ZoneBehaviour : NetworkBehaviour
 		int nbTeamPlayerInZone = m_PlayersInZone.GetValueOrDefault(playerTeam, 0);
 		m_PlayersInZone[playerTeam] = nbTeamPlayerInZone + 1;
 
-		_UpdateCurTeam();
+		_UpdateTeam();
 	}
 
 	private void OnTriggerExit(Collider iCollider)
@@ -82,7 +82,7 @@ public class ZoneBehaviour : NetworkBehaviour
 		else
 			m_PlayersInZone[playerTeam] = nbTeamPlayerInZone + 1;
 
-		_UpdateCurTeam();
+		_UpdateTeam();
 	}
 
 	private void _UpdateTeam()

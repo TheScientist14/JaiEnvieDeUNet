@@ -8,7 +8,7 @@ static class ShuffleExtension
 	public static void Shuffle<T>(this IList<T> list)
 		where T : unmanaged
 	{
-		int n = list.Length;
+		int n = list.Count;
 		while(n > 1)
 		{
 			n--;
