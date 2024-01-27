@@ -100,7 +100,7 @@ namespace Unity.FPS.Gameplay
             transform.position += m_ProjectileBase.InheritedMuzzleVelocity * Time.deltaTime;
 
             // Ignore colliders of owner
-            Collider[] ownerColliders = m_ProjectileBase.Owner.GetComponentsInChildren<Collider>();
+            Collider[] ownerColliders = m_ProjectileBase.Owner.GetComponents<Collider>();
             m_IgnoredColliders.AddRange(ownerColliders);
 
             // Handle case of player shooting (make projectiles not go through walls, and remember center-of-screen trajectory)

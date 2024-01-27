@@ -51,13 +51,19 @@ public class PlayerBehaviour : NetworkBehaviour
 			_camTransform.gameObject.SetActive(false);
 			_virtualCamera.gameObject.SetActive(false);
 			canvas.gameObject.SetActive(false);
-			Destroy(this);
-			return;
+			
+			if (!IsServer)
+			{
+				Destroy(this);
+				return;
+			}
 		}
-
-		_virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_HorizontalAxis.m_MaxSpeed = camSens.x * 0.01f;
-		_virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_VerticalAxis.m_MaxSpeed = camSens.y * 0.01f;
-
+		else
+		{
+			_virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_HorizontalAxis.m_MaxSpeed = camSens.x * 0.01f;
+			_virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_VerticalAxis.m_MaxSpeed = camSens.y * 0.01f;
+		}
+		
 		//InitWeaponsServerRPC();
 
 		foreach (var weaponController in weaponSlots)
@@ -68,6 +74,7 @@ public class PlayerBehaviour : NetworkBehaviour
 		
 		weaponSlots[activeWeaponIndex].ShowWeapon(true);
 		
+		Debug.Log("PLayerBehaviour Done Start ");
 		//SwitchWeapon(true);
 	}
 
