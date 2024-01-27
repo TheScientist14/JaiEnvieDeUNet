@@ -30,7 +30,7 @@ public class HealthComponent : NetworkBehaviour
 		{
 			if (IsServer)
 			{
-				PVEGameMode.Instance().CheckEnemies();
+				PVEGameMode.Instance().AddToEnemyDeathCounter();
 			}
 			OnDeath.Invoke();
 		}

@@ -13,6 +13,7 @@ public class PVEGameMode : CommonGameMode
 	[SerializeField] private List<Wave> _waves;
 	[SerializeField] private List<DoorBehaviour> doors;
 
+	private int _enemyDeathCounter = 0;
 	private int _roomNumber = 0;
 	
 	public static PVEGameMode Instance()
@@ -20,19 +21,13 @@ public class PVEGameMode : CommonGameMode
 		return instance as PVEGameMode;
 	}
 
-	public void CheckEnemies()
+	public void AddToEnemyDeathCounter()
 	{
-		foreach (var enemy  in _waves[_roomNumber]._enemiesToActivate)
+		_enemyDeathCounter++;
+		if (_enemyDeathCounter == _waves[_roomNumber]._enemiesToActivate.Count)
 		{
-			EnemyController enemyController = enemy.GetComponent<EnemyController>();
-			if (enemyController && enemy.GetComponent<HealthComponent>().GetHealth() > 0)
-			{
-				return;
-			}
+			OpenDoorAndActivateEnemies();
 		}
-		
-		OpenDoorAndActivateEnemies();
-		
 	}
 
 	protected override void OnAllPlayersConnected()
@@ -44,6 +39,7 @@ public class PVEGameMode : CommonGameMode
 			door.ToggleDoor();
 		}
 		
+		ActivateAllWaveBotsClientRpc(0);
 		ActivateAllWaveBots(0);
 		
 	}
@@ -51,10 +47,17 @@ public class PVEGameMode : CommonGameMode
 	public void OpenDoorAndActivateEnemies()
 	{
 		doors[_roomNumber].ToggleDoor();
+		ActivateAllWaveBotsClientRpc(_roomNumber);
 		ActivateAllWaveBots(_roomNumber);
 		
 	}
 
+	[ClientRpc]
+	private void ActivateAllWaveBotsClientRpc(int waveNumber)
+	{
+		ActivateAllWaveBots(waveNumber);
+	}
+	
 	private void ActivateAllWaveBots(int waveNumber)
 	{
 		if (waveNumber <= _waves.Count)
