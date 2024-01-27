@@ -1,15 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Unity.Collections;
-using Unity.Collections.NotBurstCompatible;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 
 public class CommonGameMode : NetworkSingleton<CommonGameMode>
 {
-	protected NetworkList<FixedString32Bytes> m_Players = new NetworkList<FixedString32Bytes>();
+	protected NetworkList<FixedString32Bytes> m_PlayerNames = new NetworkList<FixedString32Bytes>();
+	protected NetworkList<ulong> m_PlayerIds = new NetworkList<ulong>();
+
+	protected NetworkVariable<int> m_PlayerCount = new NetworkVariable<int>();
 	protected NetworkVariable<int> m_NbConnectedPlayers = new NetworkVariable<int>();
 
 	public UnityEvent AllPlayersConnected;
@@ -21,12 +22,12 @@ public class CommonGameMode : NetworkSingleton<CommonGameMode>
 
 		m_NbConnectedPlayers.OnValueChanged += CheckForAllPlayersConnected;
 		AllPlayersConnected.AddListener(OnAllPlayersConnected);
-		
+
 	}
 
 	private void CheckForAllPlayersConnected(int iPrevVal, int iCurVal)
 	{
-		if(iPrevVal != m_Players.Count && iCurVal == m_Players.Count)
+		if(iPrevVal != m_PlayerCount.Value && iCurVal == m_PlayerCount.Value)
 			AllPlayersConnected.Invoke();
 	}
 
@@ -36,35 +37,62 @@ public class CommonGameMode : NetworkSingleton<CommonGameMode>
 
 		if(IsServer)
 		{
-			
-			m_NbConnectedPlayers.Value = NetworkManager.Singleton.ConnectedClientsIds.Count;
-			
-			foreach (var player in NetworkInit.s_PayloadAllocation.MatchProperties.Players)
-			{
-				m_Players.Add(new FixedString32Bytes(
-					player.CustomData.GetAs<Dictionary<string, string>>()
-						.GetValueOrDefault("Name", "UnknownPlayer")
-					));
-			}
-				
-			//m_Players.SetDirty(true);
+			m_PlayerCount.Value = NetworkManager.Singleton.ConnectedClientsIds.Count;
+
+			m_NbConnectedPlayers.Value = 0;
+			foreach(ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
+				_OnPlayerConnected(clientId);
+
+			NetworkManager.Singleton.OnClientConnectedCallback += _OnPlayerConnected;
 		}
 	}
 
-	public void OnPlayerConnected()
+	void _OnPlayerConnected(ulong iPlayerId)
 	{
+		ClientRpcParams clientRpcParams = new ClientRpcParams
+		{
+			Send = new ClientRpcSendParams
+			{
+				TargetClientIds = new ulong[] { iPlayerId }
+			}
+		};
+
+		_RegisterClientRpc(iPlayerId, clientRpcParams);
+	}
+
+	[ClientRpc]
+	void _RegisterClientRpc(ulong iClientId, ClientRpcParams iClientRpcParams)
+	{
+		if(!IsClient || !IsLocalPlayer || OwnerClientId != iClientId)
+			return;
+
+		Debug.Log("Registering client to server");
+		_ReceiveClientInfoServerRpc(iClientId, new FixedString32Bytes(LobbyManager.instance.PlayerName));
+	}
+
+	[ServerRpc]
+	void _ReceiveClientInfoServerRpc(ulong iPlayerId, FixedString32Bytes iPlayerName)
+	{
+		m_PlayerIds.Add(iPlayerId);
+		m_PlayerNames.Add(iPlayerName);
 		m_NbConnectedPlayers.Value += 1;
 	}
 
-	public List<FixedString32Bytes> GetPlayers()
+	public List<FixedString32Bytes> GetPlayerNames()
 	{
 		List<FixedString32Bytes> players = new List<FixedString32Bytes>();
-		
-		foreach (var player in m_Players)
-		{
-			players.Add(player.Value);
-		}
-		
+		foreach(FixedString32Bytes playerName in m_PlayerNames)
+			players.Add(playerName.Value);
+
+		return players;
+	}
+
+	public List<ulong> GetPlayerIds()
+	{
+		List<ulong> players = new List<ulong>();
+		foreach(ulong playerId in m_PlayerIds)
+			players.Add(playerId);
+
 		return players;
 	}
 

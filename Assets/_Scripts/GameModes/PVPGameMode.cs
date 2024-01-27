@@ -1,13 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
 static class ShuffleExtension
 {
-	public static void Shuffle<T>(this INativeList<T> list)
+	public static void Shuffle<T>(this IList<T> list)
 		where T : unmanaged
 	{
 		int n = list.Length;
@@ -24,10 +22,11 @@ static class ShuffleExtension
 
 public class PVPGameMode : CommonGameMode
 {
-	protected NetworkVariable<NativeList<int>> m_ShuffledPlayerIndices = new NetworkVariable<NativeList<int>>();
+	protected NetworkList<ulong> m_ShuffledPlayerIds = new NetworkList<ulong>();
 	protected NetworkVariable<int> m_NbTeam = new NetworkVariable<int>();
 
-	protected List<List<int>> m_Teams = new List<List<int>>();
+	protected List<List<ulong>> m_Teams = new List<List<ulong>>();
+	protected Dictionary<ulong, int> m_PlayerToTeam = new Dictionary<ulong, int>();
 
 	public static PVPGameMode Instance()
 	{
@@ -37,16 +36,8 @@ public class PVPGameMode : CommonGameMode
 	public override void Awake()
 	{
 		base.Awake();
-		
-		m_ShuffledPlayerIndices.OnValueChanged += _DispatchPlayersAction;
+
 		m_NbTeam.OnValueChanged += _DispatchPlayersAction;
-	}
-
-	public override void OnNetworkSpawn()
-	{
-		base.OnNetworkSpawn();
-
-		_DispatchPlayers();
 	}
 
 	// Server only
@@ -55,26 +46,26 @@ public class PVPGameMode : CommonGameMode
 		if(!IsServer)
 			return;
 
-		NativeList<int> playersIdx = new NativeList<int>();
-		playersIdx.InsertRangeWithBeginEnd(0, m_Players.Count);
-		playersIdx.Shuffle();
-		m_ShuffledPlayerIndices.Value = playersIdx;
+		List<ulong> playersIds = GetPlayerIds();
+		playersIds.Shuffle();
+
+		m_NbTeam.Value = iNbTeams;
 	}
 
 	protected void _DispatchPlayersAction<T>(T _, T __)
 	{
-		NativeList<int> shuffledIndices = m_ShuffledPlayerIndices.Value;
-
-		Debug.Log("Shuffled player indices: " + shuffledIndices);
+		Debug.Log("Shuffled player indices: " + m_ShuffledPlayerIds);
 
 		m_Teams.Clear();
+		m_PlayerToTeam.Clear();
 		for(int i = 0; i < m_NbTeam.Value; i++)
-			m_Teams.Add(new List<int>());
+			m_Teams.Add(new List<ulong>());
 
 		int teamIdx = 0;
-		foreach(int playerIdx in shuffledIndices)
+		foreach(ulong playerIdx in m_ShuffledPlayerIds)
 		{
 			m_Teams[teamIdx].Add(playerIdx);
+			m_PlayerToTeam[playerIdx] = teamIdx;
 
 			teamIdx++;
 			if(teamIdx >= m_NbTeam.Value)
@@ -82,8 +73,13 @@ public class PVPGameMode : CommonGameMode
 		}
 	}
 
-	protected List<List<int>> GetTeams()
+	public List<List<ulong>> GetTeams()
 	{
 		return m_Teams;
+	}
+
+	public int GetPlayerTeam(ulong iPlayerId)
+	{
+		return m_PlayerToTeam.GetValueOrDefault(iPlayerId, -1);
 	}
 }
