@@ -26,9 +26,14 @@ public class HealthComponent : NetworkBehaviour
 
 	private void _CheckForDeath(sbyte iPrevVal, sbyte iCurVal)
 	{
-		if(iPrevVal > 0 && iCurVal <= 0)
-			PVEGameMode.Instance().CheckEnemies();
+		if (iPrevVal > 0 && iCurVal <= 0)
+		{
+			if (IsServer)
+			{
+				PVEGameMode.Instance().CheckEnemies();
+			}
 			OnDeath.Invoke();
+		}
 	}
 
 	// Start is called before the first frame update
