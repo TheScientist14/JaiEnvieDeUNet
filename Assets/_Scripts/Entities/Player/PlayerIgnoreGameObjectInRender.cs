@@ -1,10 +1,8 @@
 using Unity.Netcode;
 using UnityEngine;
 
-public class PlayerLookAt : NetworkBehaviour
+public class PlayerIgnoreGameObjectInRender : NetworkBehaviour
 {
-    [SerializeField] private Transform cameraTransform;
-
     private void Start()
     {
         if (!IsOwner)
@@ -13,10 +11,5 @@ public class PlayerLookAt : NetworkBehaviour
             return;
         }
         gameObject.layer = 8;
-    }
-
-    private void FixedUpdate()
-    {
-        transform.LookAt(-cameraTransform.up);
     }
 }
