@@ -45,7 +45,7 @@ public class DoorBehaviour : NetworkBehaviour
         }
     }
 
-    private void ToggleDoor()
+    public void ToggleDoor()
     {
         _collider.enabled = !_collider.enabled;
     }

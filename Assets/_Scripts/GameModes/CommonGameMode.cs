@@ -20,6 +20,7 @@ public class CommonGameMode : NetworkSingleton<CommonGameMode>
 			AllPlayersConnected = new UnityEvent();
 
 		m_NbConnectedPlayers.OnValueChanged += CheckForAllPlayersConnected;
+		AllPlayersConnected.AddListener(OnAllPlayersConnected);
 
 		m_NbConnectedPlayers.Value = NetworkManager.Singleton.ConnectedClientsIds.Count;
 	}
@@ -53,5 +54,10 @@ public class CommonGameMode : NetworkSingleton<CommonGameMode>
 	public List<FixedString32Bytes> GetPlayers()
 	{
 		return m_Players.Value.ToList();
+	}
+
+	protected virtual void OnAllPlayersConnected()
+	{
+		Debug.Log("All players Connected");
 	}
 }
