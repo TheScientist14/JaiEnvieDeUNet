@@ -9,7 +9,7 @@ using UnityEngine.Events;
 
 public class CommonGameMode : NetworkSingleton<CommonGameMode>
 {
-	protected NetworkVariable<NativeList<FixedString32Bytes>> m_Players = new NetworkVariable<NativeList<FixedString32Bytes>>();
+	protected NetworkList<FixedString32Bytes> m_Players = new NetworkList<FixedString32Bytes>();
 	protected NetworkVariable<int> m_NbConnectedPlayers = new NetworkVariable<int>();
 
 	public UnityEvent AllPlayersConnected;
@@ -27,7 +27,7 @@ public class CommonGameMode : NetworkSingleton<CommonGameMode>
 
 	private void CheckForAllPlayersConnected(int iPrevVal, int iCurVal)
 	{
-		if(iPrevVal != m_Players.Value.Length && iCurVal == m_Players.Value.Length)
+		if(iPrevVal != m_Players.Count && iCurVal == m_Players.Count)
 			AllPlayersConnected.Invoke();
 	}
 
@@ -37,12 +37,16 @@ public class CommonGameMode : NetworkSingleton<CommonGameMode>
 
 		if(IsServer)
 		{
-			m_Players.Value.CopyFromNBC(
-				NetworkInit.s_PayloadAllocation.MatchProperties.Players.ConvertAll(
-					p => new FixedString32Bytes(p.CustomData.GetAs<Dictionary<string, string>>().GetValueOrDefault("Name", "UnknownPlayer"))
-				).ToArray()
-			);
-			m_Players.SetDirty(true);
+
+			foreach (var player in NetworkInit.s_PayloadAllocation.MatchProperties.Players)
+			{
+				m_Players.Add(new FixedString32Bytes(
+					player.CustomData.GetAs<Dictionary<string, string>>()
+						.GetValueOrDefault("Name", "UnknownPlayer")
+					));
+			}
+				
+			//m_Players.SetDirty(true);
 		}
 	}
 
@@ -53,7 +57,14 @@ public class CommonGameMode : NetworkSingleton<CommonGameMode>
 
 	public List<FixedString32Bytes> GetPlayers()
 	{
-		return m_Players.Value.ToList();
+		List<FixedString32Bytes> players = new List<FixedString32Bytes>();
+		
+		foreach (var player in m_Players)
+		{
+			players.Add(player.Value);
+		}
+		
+		return players;
 	}
 
 	protected virtual void OnAllPlayersConnected()
