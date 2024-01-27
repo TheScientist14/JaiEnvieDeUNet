@@ -23,7 +23,11 @@ namespace Unity.FPS.UI
             HealthBarImage.fillAmount = Health.GetHealth() / Health.MaxHealth;
 
             // rotate health bar to face the camera/player
-            HealthBarPivot.LookAt(Camera.main.transform.position);
+            if (Camera.main)
+            {
+                HealthBarPivot.LookAt(Camera.main.transform.position);
+            }
+            
 
             // hide health bar if needed
             if (HideFullHealthBar)
