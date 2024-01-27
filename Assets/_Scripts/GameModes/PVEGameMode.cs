@@ -30,13 +30,21 @@ public class PVEGameMode : CommonGameMode
 	{
 		base.OnAllPlayersConnected();
 
+		foreach (Wave wave in _waves)
+		{
+			foreach (GameObject enemy in wave._enemiesToActivate)
+			{
+				enemy.SetActive(false);
+			}
+		}
+
 		foreach(var door in doors)
 		{
 			door.ToggleDoor();
 		}
 
-		// ActivateAllWaveBotsClientRpc(0);
-		// ActivateAllWaveBots(0);
+		ActivateAllWaveBotsClientRpc(0);
+		ActivateAllWaveBots(0);
 
 	}
 
