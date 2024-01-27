@@ -13,7 +13,7 @@ public class PVEGameMode : CommonGameMode
 	[SerializeField] private List<Wave> _waves;
 	[SerializeField] private List<DoorBehaviour> doors;
 
-	private int _nextRoomNumber = 0;
+	private int _roomNumber = 0;
 	
 	public static PVEGameMode Instance()
 	{
@@ -22,7 +22,7 @@ public class PVEGameMode : CommonGameMode
 
 	public void CheckEnemies()
 	{
-		foreach (var enemy  in _waves[_nextRoomNumber-1]._enemiesToActivate)
+		foreach (var enemy  in _waves[_roomNumber]._enemiesToActivate)
 		{
 			EnemyController enemyController = enemy.GetComponent<EnemyController>();
 			if (enemyController && enemy.GetComponent<HealthComponent>().GetHealth() > 0)
@@ -43,13 +43,16 @@ public class PVEGameMode : CommonGameMode
 		{
 			door.ToggleDoor();
 		}
+		
+		ActivateAllWaveBots(0);
+		
 	}
 
 	public void OpenDoorAndActivateEnemies()
 	{
-		doors[_nextRoomNumber].ToggleDoor();
-		ActivateAllWaveBots(_nextRoomNumber);
-		_nextRoomNumber++;
+		doors[_roomNumber].ToggleDoor();
+		ActivateAllWaveBots(_roomNumber);
+		
 	}
 
 	private void ActivateAllWaveBots(int waveNumber)
@@ -60,6 +63,7 @@ public class PVEGameMode : CommonGameMode
             {
             	waveEnemy.SetActive(true);
             }
+			_roomNumber++;
 		}
 	}
 	
