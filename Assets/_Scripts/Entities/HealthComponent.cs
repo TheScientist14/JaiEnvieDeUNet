@@ -39,12 +39,15 @@ public class HealthComponent : NetworkBehaviour
 	// Start is called before the first frame update
 	void Start()
 	{
-		m_Health.Value = MaxHealth;
+		if (IsServer)
+		{
+			m_Health.Value = MaxHealth;
+		}
 	}
 
 	public void TakeDamage(sbyte iDamage)
 	{
-		if(!IsOwner && !IsServer)
+		if(!IsServer)
 		{
 			TakeDamageServerRPC(iDamage);
 			return;
