@@ -27,14 +27,7 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
 
         _spawnArea.isTrigger = true;
         
-        if (IsServer)
-        {
-            foreach (var clientsId in NetworkManager.Singleton.ConnectedClientsIds)
-            {
-                SingletonOnOnClientConnectedCallback(clientsId);
-            }
-            NetworkManager.Singleton.OnClientConnectedCallback += SingletonOnOnClientConnectedCallback;
-        }
+        MovePlayerToSpawnPointServerRPC(NetworkManager.Singleton.LocalClient.ClientId);
     }
 
     private void SingletonOnOnClientConnectedCallback(ulong obj)
@@ -88,30 +81,20 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
     
     private Vector3 RandomAvailableRespawnPoint()
     {
-        _spawnPoints.Shuffle();
-        foreach (var spawnPoint in _spawnPoints)
+        if (_spawnPoints.Count > 0)
         {
-            if (spawnPoint.CanSpawn)
+            _spawnPoints.Shuffle();
+            foreach (var spawnPoint in _spawnPoints)
             {
-               return spawnPoint.transform.position;
+                if (spawnPoint.CanSpawn)
+                {
+                   return spawnPoint.transform.position;
+                }
             }
+        
         }
-
         return CreateSpawnPointAndAddToList().transform.position;
-
     }
-    
-    /// <summary>
-    /// This method when used will tp a game object to a spawn point.
-    ///
-    /// WARNING : Use server side ONLY, clients do not have data 
-    /// </summary>
-    /// <param name="prmGameObject"></param>
-    public void MoveGameObjectToSpawnPoint(GameObject prmGameObject)
-    {
-        prmGameObject.transform.position = RandomAvailableRespawnPoint();
-    }
-
     
     /// <summary>
     /// This method is a ServerRPC to move a player to a spawn point.
@@ -123,11 +106,13 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
     [ServerRpc]
     public void MovePlayerToSpawnPointServerRPC(ulong playerID)
     {
-        GameObject player = NetworkManager.Singleton.ConnectedClients[playerID].PlayerObject.gameObject;
+        
+        Debug.Log($"Client {playerID} connected : spawning");
+        //GameObject player = NetworkManager.Singleton.ConnectedClients[playerID].PlayerObject.gameObject;
         
         //need to change to a client rpc
         
-        MoveGameObjectToSpawnPoint(player);
+        SingletonOnOnClientConnectedCallback(playerID);
         
     }
 }
