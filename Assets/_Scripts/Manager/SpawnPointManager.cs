@@ -29,24 +29,35 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
         if (IsServer)
         {
             NetworkManager.Singleton.OnClientConnectedCallback += SingletonOnOnClientConnectedCallback;
+            
+            foreach (var clientsId in NetworkManager.Singleton.ConnectedClientsIds)
+            {
+                SingletonOnOnClientConnectedCallback(clientsId);
+            }
         }
     }
 
     private void SingletonOnOnClientConnectedCallback(ulong obj)
-    {
-     
-        Debug.Log("Client conected : spawning");
-        SpawnPointBehaviour spawnPoint = CreateSpawnPointAndAddToList();
-
-        ClientRpcParams clientRpcParams = new ClientRpcParams
-                {
-                    Send = new ClientRpcSendParams
-                    {
-                        TargetClientIds = new ulong[]{obj}
-                    }
-                };
+    { 
+        Debug.Log("Client connected : spawning");
         
-        MovePlayerClientRpc(spawnPoint.transform.position, clientRpcParams);
+        SpawnPointBehaviour spawnPoint = CreateSpawnPointAndAddToList();
+        
+        NetworkManager.Singleton.ConnectedClients[obj].PlayerObject.gameObject.transform.position = spawnPoint.transform.position;
+        
+        Debug.Log("Spawned at : " + spawnPoint.transform.position.ToString());
+        
+        // SpawnPointBehaviour spawnPoint = CreateSpawnPointAndAddToList();
+        //
+        // ClientRpcParams clientRpcParams = new ClientRpcParams
+        //         {
+        //             Send = new ClientRpcSendParams
+        //             {
+        //                 TargetClientIds = new ulong[]{obj}
+        //             }
+        //         };
+        //
+        // MovePlayerClientRpc(spawnPoint.transform.position, clientRpcParams);
     }
 
     [ClientRpc]
@@ -55,7 +66,6 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
         Debug.Log("Spawned at : " + position.ToString());
         NetworkManager.Singleton.ConnectedClients[clientRpcParams.Send.TargetClientIds[0]].PlayerObject.gameObject.transform.position = position;
     }
-    
 
     private SpawnPointBehaviour CreateSpawnPointAndAddToList()
     {
