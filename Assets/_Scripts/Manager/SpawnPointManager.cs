@@ -34,11 +34,25 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
 
     private void SingletonOnOnClientConnectedCallback(ulong obj)
     {
-
         SpawnPointBehaviour spawnPoint = CreateSpawnPointAndAddToList();
 
-        NetworkManager.Singleton.ConnectedClients[obj].PlayerObject.gameObject.transform.position = spawnPoint.gameObject.transform.position;
+        ClientRpcParams clientRpcParams = new ClientRpcParams
+                {
+                    Send = new ClientRpcSendParams
+                    {
+                        TargetClientIds = new ulong[]{obj}
+                    }
+                };
+        
+        MovePlayerClientRpc(spawnPoint.transform.position, clientRpcParams);
     }
+
+    [ClientRpc]
+    private void MovePlayerClientRpc(Vector3 position, ClientRpcParams clientRpcParams = default)
+    {
+        NetworkManager.Singleton.ConnectedClients[clientRpcParams.Send.TargetClientIds[0]].PlayerObject.gameObject.transform.position = position;
+    }
+    
 
     private SpawnPointBehaviour CreateSpawnPointAndAddToList()
     {
@@ -103,6 +117,8 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
     public void MovePlayerToSpawnPointServerRPC(ulong playerID)
     {
         GameObject player = NetworkManager.Singleton.ConnectedClients[playerID].PlayerObject.gameObject;
+        
+        //need to change to a client rpc
         
         MoveGameObjectToSpawnPoint(player);
         
