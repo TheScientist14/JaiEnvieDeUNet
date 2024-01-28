@@ -18,7 +18,6 @@ public class SpawnPointManager : NetworkBehaviour
     private List<SpawnPointBehaviour> _spawnPoints;
 
     
-    
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
@@ -65,7 +64,8 @@ public class SpawnPointManager : NetworkBehaviour
         return randomCoord;
     }
 
-    public Vector3 RandomAvailableRespawnPoint()
+    [ServerRpc(RequireOwnership = false)]
+    public Vector3 RandomAvailableRespawnPointServerRPC()
     {
         _spawnPoints.Shuffle();
         foreach (var spawnPoint in _spawnPoints)
