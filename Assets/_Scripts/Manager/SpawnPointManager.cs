@@ -43,21 +43,15 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
         
         SpawnPointBehaviour spawnPoint = CreateSpawnPointAndAddToList();
         
-        NetworkManager.Singleton.ConnectedClients[obj].PlayerObject.gameObject.transform.position = spawnPoint.transform.position;
+        ClientRpcParams clientRpcParams = new ClientRpcParams
+                {
+                    Send = new ClientRpcSendParams
+                    {
+                        TargetClientIds = new ulong[]{obj}
+                    }
+                };
         
-        Debug.Log("Spawned at : " + spawnPoint.transform.position.ToString());
-        
-        // SpawnPointBehaviour spawnPoint = CreateSpawnPointAndAddToList();
-        //
-        // ClientRpcParams clientRpcParams = new ClientRpcParams
-        //         {
-        //             Send = new ClientRpcSendParams
-        //             {
-        //                 TargetClientIds = new ulong[]{obj}
-        //             }
-        //         };
-        //
-        // MovePlayerClientRpc(spawnPoint.transform.position, clientRpcParams);
+        MovePlayerClientRpc(spawnPoint.transform.position, clientRpcParams);
     }
 
     [ClientRpc]
