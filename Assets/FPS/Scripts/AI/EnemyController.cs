@@ -187,7 +187,7 @@ namespace Unity.FPS.AI
         void Update()
         {
             IsTargetInAttackRange = KnownDetectedTarget != null &&
-                                    !KnownDetectedTargetBehaviour.IsDead &&
+                                    !KnownDetectedTargetBehaviour.IsDead.Value &&
                                     Vector3.Distance(transform.position, KnownDetectedTarget.transform.position) <=
                                     AttackRange;
 
@@ -236,7 +236,7 @@ namespace Unity.FPS.AI
             List<Collider> colliders = Physics.OverlapSphere(transform.position, RadiusDetection).ToList();
                 foreach (var collider in colliders) 
                 {
-                    if (collider.TryGetComponent(out PlayerBehaviour playerBehaviour) && !playerBehaviour.IsDead)
+                    if (collider.TryGetComponent(out PlayerBehaviour playerBehaviour) && !playerBehaviour.IsDead.Value)
                     {
                         KnownDetectedTarget = playerBehaviour.gameObject;
                         KnownDetectedTargetBehaviour = playerBehaviour;

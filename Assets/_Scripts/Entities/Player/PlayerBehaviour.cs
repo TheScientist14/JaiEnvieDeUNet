@@ -41,9 +41,9 @@ public class PlayerBehaviour : NetworkBehaviour
 	private Collider _ground = null;
 
 	private HealthComponent _health;
-    private bool _isDead = false;
+    private NetworkVariable<bool> _isDead;
 
-    public bool IsDead { get => _isDead; set => _isDead = value; }
+    public NetworkVariable<bool> IsDead { get => _isDead; set => _isDead = value; }
 
     private void Start()
 	{
@@ -97,7 +97,7 @@ public class PlayerBehaviour : NetworkBehaviour
 
 	private void Update()
 	{
-        if (_isDead)
+        if (_isDead.Value)
         {
             return;
         }
@@ -138,7 +138,7 @@ public class PlayerBehaviour : NetworkBehaviour
 
 	private void FixedUpdate()
 	{
-		if (_isDead)
+		if (_isDead.Value)
 		{
 			return;
 		}
@@ -311,7 +311,7 @@ public class PlayerBehaviour : NetworkBehaviour
 
 	private void OnDie()
 	{
-		_isDead = true;
+		_isDead.Value = true;
 		LockCamera();
 		reviveBoxCollider.enabled = true;
 		transform.Rotate(transform.right, 90.0f);
@@ -319,7 +319,7 @@ public class PlayerBehaviour : NetworkBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-		if (IsDead && other.TryGetComponent(out PlayerBehaviour playerBehaviour))
+		if (IsDead.Value && other.TryGetComponent(out PlayerBehaviour playerBehaviour))
 		{
 			Debug.Log("OnTriggerEnter");
 			StopCoroutine(LeaveReviveBox());
@@ -329,7 +329,7 @@ public class PlayerBehaviour : NetworkBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (IsDead && other.TryGetComponent(out PlayerBehaviour playerBehaviour))
+        if (IsDead.Value && other.TryGetComponent(out PlayerBehaviour playerBehaviour))
         {
 			Debug.Log("OnTriggerExit");
             StopCoroutine(Revive());
@@ -345,7 +345,7 @@ public class PlayerBehaviour : NetworkBehaviour
 			reviveTimeLeft += Time.deltaTime;
 			yield return null;
 		}
-		IsDead = false;
+		IsDead.Value = false;
 		transform.rotation = Quaternion.identity;
         reviveBoxCollider.enabled = false;
 		_health.Heal(_health.MaxHealth);

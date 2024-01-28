@@ -80,7 +80,7 @@ namespace Unity.FPS.AI
             {
                 case AIState.Follow:
                     // Transition to attack when there is a line of sight to the target
-                    if (m_EnemyController.KnownDetectedTargetBehaviour.IsDead)
+                    if (m_EnemyController.KnownDetectedTargetBehaviour.IsDead.Value)
                     {
                         m_EnemyController.OnLostTarget();
                         break;
