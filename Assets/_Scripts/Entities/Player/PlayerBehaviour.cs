@@ -311,11 +311,17 @@ public class PlayerBehaviour : NetworkBehaviour
 
 	private void OnDie()
 	{
-		_isDead.Value = true;
-		LockCamera();
+		ModifyDeathValueServerRPC(true);
+        LockCamera();
 		reviveBoxCollider.enabled = true;
 		transform.Rotate(transform.right, 90.0f);
     }
+
+	[ServerRpc]
+	private void ModifyDeathValueServerRPC(bool newBool)
+	{
+		_isDead.Value = newBool;
+	}
 
     private void OnTriggerEnter(Collider other)
     {
@@ -345,8 +351,8 @@ public class PlayerBehaviour : NetworkBehaviour
 			reviveTimeLeft += Time.deltaTime;
 			yield return null;
 		}
-		IsDead.Value = false;
-		transform.rotation = Quaternion.identity;
+		ModifyDeathValueServerRPC(false);
+        transform.rotation = Quaternion.identity;
         reviveBoxCollider.enabled = false;
 		_health.Heal(_health.MaxHealth);
         UnlockCamera();
