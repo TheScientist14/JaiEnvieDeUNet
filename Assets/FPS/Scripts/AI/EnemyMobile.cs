@@ -83,8 +83,6 @@ namespace Unity.FPS.AI
                     if (m_EnemyController.KnownDetectedTargetBehaviour.IsDead)
                     {
                         m_EnemyController.OnLostTarget();
-                        AiState = AIState.Patrol;
-                        m_EnemyController.SetNavDestination(m_EnemyController.GetDestinationOnPath());
                         break;
                     }
                     if (m_EnemyController.IsTargetInAttackRange)
