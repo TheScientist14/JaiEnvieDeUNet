@@ -72,12 +72,12 @@ public class HealthComponent : NetworkBehaviour
 			return;
 		}
 
-		if (iHeal <= 0 || m_Health.Value <= MaxHealth)
+		if (iHeal <= 0 || m_Health.Value >= MaxHealth)
 		{
 			return;
 		}
 
-		m_Health.Value += (sbyte)Mathf.Max(iHeal, MaxHealth);
+		m_Health.Value = (sbyte)Mathf.Min((int)m_Health.Value + (int) iHeal, MaxHealth);
 		OnHealed.Invoke(iHeal);
 
 
