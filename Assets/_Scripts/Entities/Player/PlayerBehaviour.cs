@@ -41,7 +41,7 @@ public class PlayerBehaviour : NetworkBehaviour
 	private Collider _ground = null;
 
 	private HealthComponent _health;
-    private NetworkVariable<bool> _isDead;
+    private NetworkVariable<bool> _isDead = new NetworkVariable<bool>();
 
     public NetworkVariable<bool> IsDead { get => _isDead; set => _isDead = value; }
 
