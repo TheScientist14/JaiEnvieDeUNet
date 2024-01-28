@@ -364,7 +364,7 @@ public class PlayerBehaviour : NetworkBehaviour
                 TargetClientIds = new ulong[] { OwnerClientId }
             }
         };
-
+        reviveTimeLeft = 0.0f;
         _health.Heal(_health.MaxHealth);
 		reviveBoxCollider.enabled = false;
 		ReviveClientRPC(clientRpcParams);
