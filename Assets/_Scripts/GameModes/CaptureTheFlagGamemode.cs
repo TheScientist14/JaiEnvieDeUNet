@@ -26,8 +26,11 @@ public class CaptureTheFlagGamemode : PVPGameMode
 	{
 		base.OnNetworkSpawn();
 
-		m_TeamPoints.Add(0);
-		m_TeamPoints.Add(0);
+		if(IsServer)
+		{
+			m_TeamPoints.Add(0);
+			m_TeamPoints.Add(0);
+		}
 	}
 
 	protected override void OnAllPlayersConnected()
