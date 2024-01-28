@@ -528,7 +528,7 @@ namespace Unity.FPS.Game
         public void HandleShootServerRPC(Vector3 shotDirection, Vector3 shotPosition)
         {
             //DebugClientRPC();
-            Debug.Log($"PROJPREF : {ProjectilePrefab.name} || {shotPosition} || {gameObject.name}");
+            //Debug.Log($"PROJPREF : {ProjectilePrefab.name} || {shotPosition} || {gameObject.name}");
             ProjectileBase newProjectile = Instantiate(ProjectilePrefab, shotPosition,
                 Quaternion.LookRotation(shotDirection));
             newProjectile.GetComponent<NetworkObject>().Spawn();
