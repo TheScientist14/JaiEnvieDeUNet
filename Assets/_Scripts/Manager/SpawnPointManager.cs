@@ -23,6 +23,8 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
         base.OnNetworkSpawn();
 
         TryGetComponent(out _spawnArea);
+
+        _spawnArea.isTrigger = true;
         
         if (IsServer)
         {
