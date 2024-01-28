@@ -58,7 +58,7 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
     private void MovePlayerClientRpc(Vector3 position, ClientRpcParams clientRpcParams = default)
     {
         Debug.Log("Spawned at : " + position.ToString());
-        NetworkManager.Singleton.ConnectedClients[clientRpcParams.Send.TargetClientIds[0]].PlayerObject.gameObject.transform.position = position;
+        NetworkManager.Singleton.LocalClient.PlayerObject.gameObject.transform.position = position;
     }
 
     private SpawnPointBehaviour CreateSpawnPointAndAddToList()
