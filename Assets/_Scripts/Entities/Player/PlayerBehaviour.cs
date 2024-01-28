@@ -18,7 +18,6 @@ public class PlayerBehaviour : NetworkBehaviour
 	[SerializeField] private float timeToRevive = 5.0f;
 	private float reviveTimeLeft = 0.0f;
 	[SerializeField] private float penaltyMultiplierOutsideReviveBox = 0.5f;
-	[SerializeField] CapsuleCollider normalCapsuleCollider;
 	[SerializeField] BoxCollider reviveBoxCollider;
 
     [Header("Weapons")]
@@ -314,7 +313,6 @@ public class PlayerBehaviour : NetworkBehaviour
 	{
 		_isDead = true;
 		LockCamera();
-		normalCapsuleCollider.enabled = false;
 		reviveBoxCollider.enabled = true;
 		transform.Rotate(transform.right, 90.0f);
     }
@@ -346,7 +344,6 @@ public class PlayerBehaviour : NetworkBehaviour
 		}
 		IsDead = false;
 		transform.rotation = Quaternion.identity;
-        normalCapsuleCollider.enabled = true;
         reviveBoxCollider.enabled = false;
         UnlockCamera();
 		
