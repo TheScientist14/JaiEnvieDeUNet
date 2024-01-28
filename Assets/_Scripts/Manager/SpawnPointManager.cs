@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using _Scripts.MapObjects;
 using Unity.Mathematics;
 using Unity.Netcode;
@@ -28,18 +29,19 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
         
         if (IsServer)
         {
+            // foreach (var clientsId in NetworkManager.Singleton.ConnectedClientsIds)
+            // {
+            //     SingletonOnOnClientConnectedCallback(clientsId);
+            // }
             NetworkManager.Singleton.OnClientConnectedCallback += SingletonOnOnClientConnectedCallback;
             
-            foreach (var clientsId in NetworkManager.Singleton.ConnectedClientsIds)
-            {
-                SingletonOnOnClientConnectedCallback(clientsId);
-            }
+            
         }
     }
 
     private void SingletonOnOnClientConnectedCallback(ulong obj)
     { 
-        Debug.Log("Client connected : spawning");
+        Debug.Log($"Client {obj} connected : spawning");
         
         SpawnPointBehaviour spawnPoint = CreateSpawnPointAndAddToList();
         
