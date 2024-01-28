@@ -329,7 +329,7 @@ public class PlayerBehaviour : NetworkBehaviour
 
 	private void OnTriggerEnter(Collider other)
 	{
-		if (IsDead.Value && other.TryGetComponent(out PlayerBehaviour playerBehaviour) && IsServer)
+		if (IsDead.Value && other.TryGetComponent(out PlayerBehaviour playerBehaviour) && !playerBehaviour.IsDead.Value && IsServer)
 		{
 			Debug.Log("OnTriggerEnter");
 			StopCoroutine(LeaveReviveBox());
@@ -339,7 +339,7 @@ public class PlayerBehaviour : NetworkBehaviour
 
 	private void OnTriggerExit(Collider other)
 	{
-		if (IsDead.Value && other.TryGetComponent(out PlayerBehaviour playerBehaviour) && IsServer)
+		if (IsDead.Value && other.TryGetComponent(out PlayerBehaviour playerBehaviour) && !playerBehaviour.IsDead.Value && IsServer)
 		{
 			Debug.Log("OnTriggerExit");
 			StopCoroutine(Revive());
