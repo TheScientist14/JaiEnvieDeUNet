@@ -14,14 +14,18 @@ public class HealthComponent : NetworkBehaviour
 
 	public UnityEvent<int> OnDamaged;
 
+	public UnityEvent<int> OnHealed;
+
 	private void Awake()
 	{
 		if(OnDeath == null)
 			OnDeath = new UnityEvent();
 		if(OnDamaged == null)
 			OnDamaged = new UnityEvent<int>();
+        if (OnHealed == null)
+            OnHealed = new UnityEvent<int>();
 
-		m_Health.OnValueChanged += _CheckForDeath;
+        m_Health.OnValueChanged += _CheckForDeath;
 	}
 
 	private void _CheckForDeath(sbyte iPrevVal, sbyte iCurVal)
@@ -60,10 +64,35 @@ public class HealthComponent : NetworkBehaviour
 		OnDamaged.Invoke(iDamage);
 	}
 
+	public void Heal(sbyte iHeal)
+	{
+		if(!IsServer) 
+		{
+			HealServerRPC(iHeal);
+			return;
+		}
+
+		if (iHeal <= 0 || m_Health.Value <= MaxHealth)
+		{
+			return;
+		}
+
+		m_Health.Value += (sbyte)Mathf.Max(iHeal, MaxHealth);
+		OnHealed.Invoke(iHeal);
+
+
+    }
+
 	[ServerRpc]
 	private void TakeDamageServerRPC(sbyte iDamage)
 	{
 		TakeDamage(iDamage);
+	}
+
+	[ServerRpc]
+	private void HealServerRPC(sbyte iHeal)
+	{
+		Heal(iHeal);
 	}
 
 

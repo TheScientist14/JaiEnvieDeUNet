@@ -321,7 +321,7 @@ public class PlayerBehaviour : NetworkBehaviour
     {
 		if (IsDead && other.TryGetComponent(out PlayerBehaviour playerBehaviour))
 		{
-			Debug.Log("OnTrigerEnter");
+			Debug.Log("OnTriggerEnter");
 			StopCoroutine(LeaveReviveBox());
 			StartCoroutine(Revive());
 		}
@@ -331,7 +331,7 @@ public class PlayerBehaviour : NetworkBehaviour
     {
         if (IsDead && other.TryGetComponent(out PlayerBehaviour playerBehaviour))
         {
-			Debug.Log("OnTrigerExit");
+			Debug.Log("OnTriggerExit");
             StopCoroutine(Revive());
             StartCoroutine(LeaveReviveBox());
         }
@@ -348,6 +348,7 @@ public class PlayerBehaviour : NetworkBehaviour
 		IsDead = false;
 		transform.rotation = Quaternion.identity;
         reviveBoxCollider.enabled = false;
+		_health.Heal(_health.MaxHealth);
         UnlockCamera();
 		
 	}
