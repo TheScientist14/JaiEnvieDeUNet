@@ -84,7 +84,8 @@ namespace Unity.FPS.Gameplay
         private IEnumerator NetworkDestroyWithDelay(NetworkObject networkObject, float seconds)
         {
             yield return new WaitForSeconds(seconds);
-            networkObject.Despawn();
+            if(IsServer)
+                networkObject.Despawn();
         }
 
         new void OnShoot()
