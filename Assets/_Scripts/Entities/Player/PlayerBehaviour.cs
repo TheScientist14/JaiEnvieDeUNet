@@ -4,6 +4,8 @@ using Unity.Netcode;
 using Unity.XR.OpenVR;
 using System.Collections.Generic;
 using Unity.FPS.Game;
+using NaughtyAttributes;
+using System.Collections;
 
 
 [RequireComponent(typeof(Rigidbody))]
@@ -13,6 +15,11 @@ public class PlayerBehaviour : NetworkBehaviour
 	[SerializeField] private float playerSpeed = 2.0f;
 	[SerializeField] private float jumpHeight = 1.0f;
     [SerializeField] private float airControl = 0;
+	[SerializeField] private float timeToRevive = 5.0f;
+	private float reviveTimeLeft = 0.0f;
+	[SerializeField] private float penaltyMultiplierOutsideReviveBox = 0.5f;
+	[SerializeField] CapsuleCollider normalCapsuleCollider;
+	[SerializeField] BoxCollider reviveBoxCollider;
 
     [Header("Weapons")]
 	[SerializeField] private List<WeaponController> weapons = new List<WeaponController>();
@@ -34,10 +41,18 @@ public class PlayerBehaviour : NetworkBehaviour
 	private bool _hasJumped = false;
 	private Collider _ground = null;
 
+	private HealthComponent _health;
+    private bool _isDead = false;
 
+    public bool IsDead { get => _isDead; set => _isDead = value; }
 
-	private void Start()
+    private void Start()
 	{
+		_health = GetComponent<HealthComponent>();
+
+		_health.OnDeath.AddListener(OnDie);
+		_health.OnDamaged.AddListener(OnDamaged);
+
 		_rb = GetComponent<Rigidbody>();
 		_inputManager = InputManager.instance;
 		_camTransform = GetComponentInChildren<Camera>().transform;
@@ -56,15 +71,11 @@ public class PlayerBehaviour : NetworkBehaviour
 			return;
 			
 		}
-		else
-		{
-			_virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_HorizontalAxis.m_MaxSpeed = camSens.x * 0.01f;
-			_virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_VerticalAxis.m_MaxSpeed = camSens.y * 0.01f;
-		}
-		
-		//InitWeaponsServerRPC();
+        UnlockCamera();
 
-		foreach (var weaponController in weaponSlots)
+        //InitWeaponsServerRPC();
+
+        foreach (var weaponController in weaponSlots)
 		{
 			weaponController.Owner = gameObject;
 			weaponController.ShowWeapon(false);
@@ -87,6 +98,10 @@ public class PlayerBehaviour : NetworkBehaviour
 
 	private void Update()
 	{
+        if (_isDead)
+        {
+            return;
+        }
 		if(IsGrounded() && _inputManager.PlayerJumped())
 			_hasJumped = true;
 
@@ -124,6 +139,10 @@ public class PlayerBehaviour : NetworkBehaviour
 
 	private void FixedUpdate()
 	{
+		if (_isDead)
+		{
+			return;
+		}
 		Vector3 forward = _camTransform.forward;
 		forward.y = 0;
 		Vector3 move = forward.normalized * _inputManager.GetPlayerMovement().y + _camTransform.right * _inputManager.GetPlayerMovement().x;
@@ -285,4 +304,74 @@ public class PlayerBehaviour : NetworkBehaviour
 		if(iCollision.collider == _ground)
 			_ground = null;
 	}
+
+	private void OnDamaged(int damage)
+	{
+		//TODO do smthg?
+	}
+
+	private void OnDie()
+	{
+		_isDead = true;
+		LockCamera();
+		normalCapsuleCollider.enabled = false;
+		reviveBoxCollider.enabled = true;
+		transform.Rotate(transform.right, 90.0f);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+		if (IsDead && other.TryGetComponent(out PlayerBehaviour playerBehaviour))
+		{
+			StopCoroutine(LeaveReviveBox());
+			StartCoroutine(Revive());
+		}
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (IsDead && other.TryGetComponent(out PlayerBehaviour playerBehaviour))
+        {
+            StopCoroutine(Revive());
+            StartCoroutine(LeaveReviveBox());
+        }
+    }
+
+    private IEnumerator Revive()
+	{
+		while (reviveTimeLeft < timeToRevive)
+		{
+			reviveTimeLeft += Time.deltaTime;
+			yield return null;
+		}
+		IsDead = false;
+		transform.rotation = Quaternion.identity;
+        normalCapsuleCollider.enabled = true;
+        reviveBoxCollider.enabled = false;
+        UnlockCamera();
+		
+	}
+
+	private IEnumerator LeaveReviveBox()
+	{
+		while(reviveTimeLeft > 0.0f) 
+		{
+			reviveTimeLeft -= Time.deltaTime * penaltyMultiplierOutsideReviveBox;
+			yield return null;
+		}
+		reviveTimeLeft = 0.0f;
+	}
+
+    private void LockCamera()
+	{
+        _virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_HorizontalAxis.m_MaxSpeed = 0.0f;
+        _virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_VerticalAxis.m_MaxSpeed = 0.0f;
+    }
+
+    private void UnlockCamera()
+	{
+        _virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_HorizontalAxis.m_MaxSpeed = camSens.x * 0.01f;
+        _virtualCamera.GetCinemachineComponent<CinemachinePOV>().m_VerticalAxis.m_MaxSpeed = camSens.y * 0.01f;
+
+    }
 }

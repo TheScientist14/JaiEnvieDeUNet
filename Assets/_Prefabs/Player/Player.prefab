@@ -434,6 +434,7 @@ GameObject:
   - component: {fileID: 494077395280701030}
   - component: {fileID: 3404948423578754577}
   - component: {fileID: 2247517050493367489}
+  - component: {fileID: 2201276999434248358}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -569,6 +570,10 @@ MonoBehaviour:
   playerSpeed: 15
   jumpHeight: 300
   airControl: 0.3
+  timeToRevive: 5
+  penaltyMultiplierOutsideReviveBox: 0.5
+  normalCapsuleCollider: {fileID: 7419934448005113795}
+  reviveBoxCollider: {fileID: 2201276999434248358}
   weapons:
   - {fileID: 8323776800172828795, guid: b318fabc73446b746a1005cede0c4ceb, type: 3}
   - {fileID: 8323776800172828795, guid: 3439b4874b7b44e4eb2216314c46b85c, type: 3}
@@ -670,6 +675,27 @@ MonoBehaviour:
   OnDamaged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!65 &2201276999434248358
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6523835653301497932}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 0
+  serializedVersion: 3
+  m_Size: {x: 2, y: 2, z: 2}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &8640178919273737603
 GameObject:
   m_ObjectHideFlags: 0

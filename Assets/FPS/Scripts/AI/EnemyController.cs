@@ -119,6 +119,7 @@ namespace Unity.FPS.AI
         MaterialPropertyBlock m_EyeColorMaterialPropertyBlock;
 
         public GameObject KnownDetectedTarget;
+        public PlayerBehaviour KnownDetectedTargetBehaviour;
         public bool IsTargetInAttackRange;
         public bool IsSeeingTarget => DetectionModule.IsSeeingTarget;
         public bool HadKnownTarget => DetectionModule.HadKnownTarget;
@@ -186,6 +187,7 @@ namespace Unity.FPS.AI
         void Update()
         {
             IsTargetInAttackRange = KnownDetectedTarget != null &&
+                                    !KnownDetectedTargetBehaviour.IsDead &&
                                     Vector3.Distance(transform.position, KnownDetectedTarget.transform.position) <=
                                     AttackRange;
 
@@ -220,10 +222,6 @@ namespace Unity.FPS.AI
                     _timeSinceLastDetection += Time.deltaTime;
                     yield return null;
                 }
-                _detectedTarget = false;
-                _timeSinceLastDetection = 0.0f;
-                KnownDetectedTarget = null;
-                DamagingPlayer = null;
                 OnLostTarget();
             }
             if (_detectedTargetOnHit)
@@ -233,18 +231,15 @@ namespace Unity.FPS.AI
                     _timeSinceLastDetectionOnHit += Time.deltaTime;
                     yield return null;
                 }
-                _detectedTargetOnHit = false;
-                _timeSinceLastDetectionOnHit = 0.0f;
-                KnownDetectedTarget = null;
-                DamagingPlayer = null;
                 OnLostTarget();
             }
             List<Collider> colliders = Physics.OverlapSphere(transform.position, RadiusDetection).ToList();
                 foreach (var collider in colliders) 
                 {
-                    if (collider.TryGetComponent(out PlayerBehaviour playerBehaviour))
+                    if (collider.TryGetComponent(out PlayerBehaviour playerBehaviour) && !playerBehaviour.IsDead)
                     {
                         KnownDetectedTarget = playerBehaviour.gameObject;
+                        KnownDetectedTargetBehaviour = playerBehaviour;
                         _detectedTarget = true;
                         OnDetectedTarget();
                         break;
@@ -254,8 +249,16 @@ namespace Unity.FPS.AI
             StartCoroutine(Detect());
         }
 
-        void OnLostTarget()
+        public void OnLostTarget()
         {
+            _detectedTarget = false;
+            _detectedTargetOnHit = false;
+            _timeSinceLastDetection = 0.0f;
+            _timeSinceLastDetectionOnHit = 0.0f;
+            KnownDetectedTarget = null;
+            KnownDetectedTargetBehaviour = null;
+            DamagingPlayer = null;
+
             onLostTarget.Invoke();
 
             // Set the eye attack color and property block if the eye renderer is set
@@ -330,6 +333,7 @@ namespace Unity.FPS.AI
             {
                 _detectedTargetOnHit = true;
                 KnownDetectedTarget = DamagingPlayer;
+                KnownDetectedTargetBehaviour = DamagingPlayer.GetComponent<PlayerBehaviour>();
                 OnDetectedTarget();
             }
 

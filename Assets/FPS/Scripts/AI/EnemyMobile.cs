@@ -80,12 +80,18 @@ namespace Unity.FPS.AI
             {
                 case AIState.Follow:
                     // Transition to attack when there is a line of sight to the target
+                    if (m_EnemyController.KnownDetectedTargetBehaviour.IsDead)
+                    {
+                        m_EnemyController.OnLostTarget();
+                        AiState = AIState.Patrol;
+                        m_EnemyController.SetNavDestination(m_EnemyController.GetDestinationOnPath());
+                        break;
+                    }
                     if (m_EnemyController.IsTargetInAttackRange)
                     {
                         AiState = AIState.Attack;
                         m_EnemyController.SetNavDestination(transform.position);
                     }
-
                     break;
                 case AIState.Attack:
                     // Transition to follow when no longer a target in attack range
