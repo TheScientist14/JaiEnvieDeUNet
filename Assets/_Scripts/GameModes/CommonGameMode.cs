@@ -48,6 +48,8 @@ public class CommonGameMode : NetworkSingleton<CommonGameMode>
 
 			NetworkManager.Singleton.OnClientConnectedCallback += _OnPlayerConnected;
 		}
+
+		Debug.Log("CommonGamemode spawned");
 	}
 
 	void _OnPlayerConnected(ulong iPlayerId)
@@ -109,5 +111,12 @@ public class CommonGameMode : NetworkSingleton<CommonGameMode>
 	protected virtual void OnAllPlayersConnected()
 	{
 		Debug.Log("All players Connected");
+		LogClientRpc("All players Connected");
+	}
+
+	[ClientRpc]
+	public void LogClientRpc(FixedString128Bytes iTxt)
+	{
+		Debug.Log(iTxt);
 	}
 }

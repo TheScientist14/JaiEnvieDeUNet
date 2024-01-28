@@ -31,6 +31,8 @@ public class CaptureTheFlagGamemode : PVPGameMode
 			m_TeamPoints.Add(0);
 			m_TeamPoints.Add(0);
 		}
+
+		Debug.Log("CaptureTheFlag spawned");
 	}
 
 	protected override void OnAllPlayersConnected()

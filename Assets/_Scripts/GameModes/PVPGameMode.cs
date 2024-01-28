@@ -36,6 +36,8 @@ public class PVPGameMode : CommonGameMode
 		base.OnNetworkSpawn();
 
 		m_NbTeam.OnValueChanged += _DispatchPlayersAction;
+
+		Debug.Log("PVP spawned");
 	}
 
 	// Server only
