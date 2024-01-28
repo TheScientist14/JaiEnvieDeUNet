@@ -29,13 +29,11 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
         
         if (IsServer)
         {
-            // foreach (var clientsId in NetworkManager.Singleton.ConnectedClientsIds)
-            // {
-            //     SingletonOnOnClientConnectedCallback(clientsId);
-            // }
+            foreach (var clientsId in NetworkManager.Singleton.ConnectedClientsIds)
+            {
+                SingletonOnOnClientConnectedCallback(clientsId);
+            }
             NetworkManager.Singleton.OnClientConnectedCallback += SingletonOnOnClientConnectedCallback;
-            
-            
         }
     }
 
