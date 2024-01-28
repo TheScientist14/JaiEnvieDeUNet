@@ -71,7 +71,13 @@ public class CommonGameMode : NetworkSingleton<CommonGameMode>
 			return;
 
 		Debug.Log("Registering client to server but different");
-		_ReceiveClientInfoServerRpc(iClientId, new FixedString32Bytes(LobbyManager.instance.PlayerName));
+
+		// tmp fix to test on local host
+		string playerName = LobbyManager.instance.PlayerName;
+		if(playerName == null)
+			playerName = "NoName";
+
+		_ReceiveClientInfoServerRpc(iClientId, new FixedString32Bytes(playerName));
 	}
 
 	[ServerRpc(RequireOwnership = false)]

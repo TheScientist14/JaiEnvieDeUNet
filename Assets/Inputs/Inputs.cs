@@ -101,12 +101,12 @@ public partial class @Inputs: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": ""ShowScore"",
-                    ""type"": ""Value"",
+                    ""type"": ""Button"",
                     ""id"": ""546d71d1-ed3b-4d6c-8401-55cd8c6c4b89"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": true
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [

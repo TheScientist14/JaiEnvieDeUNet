@@ -46,6 +46,8 @@ public class PVPGameMode : CommonGameMode
 
 		List<ulong> playersIds = GetPlayerIds();
 		playersIds.Shuffle();
+		foreach(ulong playersId in playersIds)
+			m_ShuffledPlayerIds.Add(playersId);
 
 		m_NbTeam.Value = iNbTeams;
 	}

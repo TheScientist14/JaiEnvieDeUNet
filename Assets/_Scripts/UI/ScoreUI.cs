@@ -13,24 +13,16 @@ public class ScoreUI : MonoBehaviour
 
 	private void Start()
 	{
-		m_Gamemode = CaptureTheFlagGamemode.Instance();
 		m_ScorePanel.SetActive(false);
 	}
 
 	void Update()
 	{
 		if(m_ScorePanel.activeInHierarchy)
-		{
 			UpdateUI();
 
-			if(InputManager.instance.PlayerHideScore())
-				m_ScorePanel.SetActive(false);
-		}
-		else
-		{
-			if(InputManager.instance.PlayerShowScore())
-				m_ScorePanel.SetActive(true);
-		}
+		if(InputManager.instance.PlayerToggleShowScore())
+			m_ScorePanel.SetActive(!m_ScorePanel.activeSelf);
 	}
 
 	public void UpdateUI()
@@ -38,7 +30,7 @@ public class ScoreUI : MonoBehaviour
 		int teamIdx = 0;
 		foreach(TextMeshProUGUI scoreTxt in m_ScoreTxts)
 		{
-			scoreTxt.text = m_Gamemode.GetTeamPoints(teamIdx).ToString();
+			scoreTxt.text = CaptureTheFlagGamemode.Instance().GetTeamPoints(teamIdx).ToString();
 			teamIdx++;
 		}
 	}

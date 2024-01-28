@@ -40,7 +40,14 @@ public class ZoneBehaviour : NetworkBehaviour
 	IEnumerator _GainPoints()
 	{
 		var delay = new WaitForSeconds(m_PointFrequency);
-		CaptureTheFlagGamemode gamemode = CaptureTheFlagGamemode.Instance();
+		CaptureTheFlagGamemode gamemode = null;
+		do
+		{
+			gamemode = CaptureTheFlagGamemode.Instance();
+			yield return new WaitForEndOfFrame();
+		}
+		while(gamemode == null);
+
 		while(true)
 		{
 			if(m_CurTeam.Value >= 0 && m_DoOwnZone.Value)
@@ -94,6 +101,9 @@ public class ZoneBehaviour : NetworkBehaviour
 
 	private void _IncrPlayerbNbForTeam(int iTeamIdx)
 	{
+		if(iTeamIdx < 0)
+			return;
+
 		int nbTeamPlayerInZone = m_PlayersInZone.GetValueOrDefault(iTeamIdx, 0);
 		m_PlayersInZone[iTeamIdx] = nbTeamPlayerInZone + 1;
 
@@ -102,6 +112,9 @@ public class ZoneBehaviour : NetworkBehaviour
 
 	private void _DecrPlayerNbForTeam(int iTeamIdx)
 	{
+		if(iTeamIdx < 0)
+			return;
+
 		int nbTeamPlayerInZone = m_PlayersInZone.GetValueOrDefault(iTeamIdx, 0);
 
 		if(nbTeamPlayerInZone <= 1)

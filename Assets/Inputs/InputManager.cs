@@ -110,13 +110,8 @@ public class InputManager : Singleton<InputManager>
 		return _inputs.Player.SwitchWeapon.ReadValue<float>();
 	}
 
-	public bool PlayerShowScore()
+	public bool PlayerToggleShowScore()
 	{
-		return _inputs.Player.ShowScore.ReadValue<bool>();
-	}
-
-	public bool PlayerHideScore()
-	{
-		return !_inputs.Player.ShowScore.ReadValue<bool>();
+		return _inputs.Player.ShowScore.triggered;
 	}
 }
