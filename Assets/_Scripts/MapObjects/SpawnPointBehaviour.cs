@@ -6,18 +6,18 @@ using UnityEngine;
 
 namespace _Scripts.MapObjects
 {
-    [RequireComponent(typeof(BoxCollider), typeof(NetworkObject), typeof(NetworkTransform))]
+    [RequireComponent(typeof(BoxCollider))]
     public class SpawnPointBehaviour : NetworkBehaviour
     {
-        private NetworkVariable<bool> _canSpawn;
+        private bool _canSpawn;
 
-        public bool CanSpawn => _canSpawn.Value;
+        public bool CanSpawn => _canSpawn;
 
         private void OnTriggerEnter(Collider other)
         {
             if (other.GetComponent<PlayerBehaviour>())
             {
-                _canSpawn.Value = false;
+                _canSpawn = false;
             }
         }
 
@@ -25,7 +25,7 @@ namespace _Scripts.MapObjects
         {
             if (other.GetComponent<PlayerBehaviour>())
             {
-                _canSpawn.Value = true;
+                _canSpawn = true;
             }
         }
     }

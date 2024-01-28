@@ -8,8 +8,8 @@ using _Scripts.Helpers;
 using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
-[RequireComponent(typeof(BoxCollider), typeof(NetworkObject))]
-public class SpawnPointManager : NetworkBehaviour
+[RequireComponent(typeof(BoxCollider))]
+public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
 {
     [SerializeField] private SpawnPointBehaviour spawnPointBehaviourPrefab;
     [SerializeField] private List<BoxCollider> noSpawnBoxColliders;
@@ -63,9 +63,9 @@ public class SpawnPointManager : NetworkBehaviour
         }
         return randomCoord;
     }
-
-    [ServerRpc(RequireOwnership = false)]
-    public Vector3 RandomAvailableRespawnPointServerRPC()
+    
+    
+    private Vector3 RandomAvailableRespawnPoint()
     {
         _spawnPoints.Shuffle();
         foreach (var spawnPoint in _spawnPoints)
@@ -80,4 +80,31 @@ public class SpawnPointManager : NetworkBehaviour
 
     }
     
+    /// <summary>
+    /// This method when used will tp a game object to a spawn point.
+    ///
+    /// WARNING : Use server side ONLY, clients do not have data 
+    /// </summary>
+    /// <param name="prmGameObject"></param>
+    public void MoveGameObjectToSpawnPoint(GameObject prmGameObject)
+    {
+        prmGameObject.transform.position = RandomAvailableRespawnPoint();
+    }
+
+    
+    /// <summary>
+    /// This method is a ServerRPC to move a player to a spawn point.
+    ///
+    /// Given ID should be client id key of the network manager connected client list 
+    /// </summary>
+    /// <param name="playerID"></param>
+    
+    [ServerRpc]
+    public void MovePlayerToSpawnPointServerRPC(ulong playerID)
+    {
+        GameObject player = NetworkManager.Singleton.ConnectedClients[playerID].PlayerObject.gameObject;
+        
+        MoveGameObjectToSpawnPoint(player);
+        
+    }
 }
