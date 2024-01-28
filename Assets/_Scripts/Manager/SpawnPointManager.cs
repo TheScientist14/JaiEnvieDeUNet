@@ -26,8 +26,12 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
         TryGetComponent(out _spawnArea);
 
         _spawnArea.isTrigger = true;
-        
-        MovePlayerToSpawnPointServerRPC(NetworkManager.Singleton.LocalClient.ClientId);
+
+        if (!IsServer)
+        {
+            Debug.Log("SpawnPlayer");
+            MovePlayerToSpawnPointServerRPC(NetworkManager.Singleton.LocalClient.ClientId);
+        }
     }
 
     private void SingletonOnOnClientConnectedCallback(ulong obj)
@@ -56,6 +60,7 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
 
     private SpawnPointBehaviour CreateSpawnPointAndAddToList()
     {
+        Debug.Log("Created SpawnPoint");
         SpawnPointBehaviour spawnPoint = Instantiate(spawnPointBehaviourPrefab, GetRandomPositionInBox(), quaternion.identity);
         _spawnPoints.Add(spawnPoint);
 
