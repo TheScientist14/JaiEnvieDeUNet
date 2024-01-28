@@ -15,7 +15,7 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
     [SerializeField] private List<BoxCollider> noSpawnBoxColliders;
     
     private BoxCollider _spawnArea;
-    private List<SpawnPointBehaviour> _spawnPoints;
+    private List<SpawnPointBehaviour> _spawnPoints = new ();
 
     
     public override void OnNetworkSpawn()
