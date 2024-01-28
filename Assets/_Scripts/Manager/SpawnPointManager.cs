@@ -42,8 +42,6 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
     {
         SpawnPointBehaviour spawnPoint = Instantiate(spawnPointBehaviourPrefab, GetRandomPositionInBox(), quaternion.identity);
         _spawnPoints.Add(spawnPoint);
-        
-        spawnPoint.GetComponent<NetworkObject>().Spawn();
 
         return spawnPoint;
     }
