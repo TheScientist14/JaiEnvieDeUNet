@@ -7,7 +7,7 @@ using UnityEngine;
 namespace _Scripts.MapObjects
 {
     [RequireComponent(typeof(BoxCollider))]
-    public class SpawnPointBehaviour : NetworkBehaviour
+    public class SpawnPointBehaviour : MonoBehaviour
     {
         private bool _canSpawn;
 
