@@ -7,8 +7,8 @@ using UnityEngine.Events;
 
 public class CommonGameMode : NetworkSingleton<CommonGameMode>
 {
-	protected NetworkList<FixedString32Bytes> m_PlayerNames = new NetworkList<FixedString32Bytes>();
-	protected NetworkList<ulong> m_PlayerIds = new NetworkList<ulong>();
+	protected NetworkList<FixedString32Bytes> m_PlayerNames;
+	protected NetworkList<ulong> m_PlayerIds;
 
 	protected NetworkVariable<int> m_PlayerCount = new NetworkVariable<int>();
 	protected NetworkVariable<int> m_NbConnectedPlayers = new NetworkVariable<int>();

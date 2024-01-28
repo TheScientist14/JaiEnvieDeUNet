@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Events;
 
 static class ShuffleExtension
 {
@@ -22,11 +23,13 @@ static class ShuffleExtension
 
 public class PVPGameMode : CommonGameMode
 {
-	protected NetworkList<ulong> m_ShuffledPlayerIds = new NetworkList<ulong>();
-	protected NetworkVariable<int> m_NbTeam = new NetworkVariable<int>();
+	protected NetworkList<ulong> m_ShuffledPlayerIds;
+	protected NetworkVariable<int> m_NbTeam;
 
 	protected List<List<ulong>> m_Teams = new List<List<ulong>>();
 	protected Dictionary<ulong, int> m_PlayerToTeam = new Dictionary<ulong, int>();
+
+	public UnityEvent<int> OnVictory;
 
 	public static PVPGameMode Instance()
 	{
@@ -36,6 +39,14 @@ public class PVPGameMode : CommonGameMode
 	public override void Awake()
 	{
 		base.Awake();
+
+		if(OnVictory == null)
+			OnVictory = new UnityEvent<int>();
+	}
+
+	public override void OnNetworkSpawn()
+	{
+		base.OnNetworkSpawn();
 
 		m_NbTeam.OnValueChanged += _DispatchPlayersAction;
 	}

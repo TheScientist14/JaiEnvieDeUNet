@@ -5,6 +5,12 @@ using UnityEngine;
 
 public class ZoneBehaviour : NetworkBehaviour
 {
+	//------------------------------------------------------------------------
+	// Basically, everything is done server side here.
+	// NetworkVariables are used so that clients are aware of the state
+	// of the zone, to add some VFX, SFX, etc...
+	//------------------------------------------------------------------------
+
 	// negative values means neutral zone
 	protected NetworkVariable<int> m_CurTeam = new NetworkVariable<int>();
 	protected NetworkVariable<bool> m_DoOwnZone = new NetworkVariable<bool>();
@@ -12,15 +18,11 @@ public class ZoneBehaviour : NetworkBehaviour
 	// server only
 	// map of team index to player count
 	protected Dictionary<int, int> m_PlayersInZone = new Dictionary<int, int>();
+	protected HashSet<HealthComponent> m_PlayerHealthComponentsInZone = new HashSet<HealthComponent>();
 
 	[SerializeField] private float m_CaptureDuration = 2;
 	[SerializeField] private float m_PointFrequency = 1;
 	[SerializeField] private int m_NbGainedPoints = 1;
-
-	public void Awake()
-	{
-		m_CurTeam.OnValueChanged += _TryTakeControl;
-	}
 
 	public override void OnNetworkSpawn()
 	{
@@ -28,6 +30,7 @@ public class ZoneBehaviour : NetworkBehaviour
 
 		if(IsServer)
 		{
+			m_CurTeam.OnValueChanged += _TryTakeControl;
 			m_CurTeam.Value = -1;
 
 			StartCoroutine(_GainPoints());
@@ -52,16 +55,20 @@ public class ZoneBehaviour : NetworkBehaviour
 		if(!IsServer)
 			return;
 
+		// tracking only players
 		PlayerBehaviour player = iCollider.gameObject.GetComponent<PlayerBehaviour>();
 		if(player == null)
 			return;
 
-		int playerTeam = PVPGameMode.Instance().GetPlayerTeam(player.OwnerClientId);
+		HealthComponent health = player.GetComponent<HealthComponent>();
+		if(health == null)
+			return;
 
-		int nbTeamPlayerInZone = m_PlayersInZone.GetValueOrDefault(playerTeam, 0);
-		m_PlayersInZone[playerTeam] = nbTeamPlayerInZone + 1;
+		m_PlayerHealthComponentsInZone.Add(health);
+		health.OnDeath.AddListener(_RemoveDeadPlayers);
 
-		_UpdateTeam();
+		int playerTeam = PVPGameMode.Instance().GetPlayerTeam(health.OwnerClientId);
+		_IncrPlayerbNbForTeam(playerTeam);
 	}
 
 	private void OnTriggerExit(Collider iCollider)
@@ -69,18 +76,38 @@ public class ZoneBehaviour : NetworkBehaviour
 		if(!IsServer)
 			return;
 
+		// tracking only players
 		PlayerBehaviour player = iCollider.gameObject.GetComponent<PlayerBehaviour>();
 		if(player == null)
 			return;
 
-		int playerTeam = PVPGameMode.Instance().GetPlayerTeam(player.OwnerClientId);
+		HealthComponent health = player.GetComponent<HealthComponent>();
+		if(health == null)
+			return;
 
-		int nbTeamPlayerInZone = m_PlayersInZone.GetValueOrDefault(playerTeam, 0);
+		m_PlayerHealthComponentsInZone.Remove(health);
+		health.OnDeath.RemoveListener(_RemoveDeadPlayers);
+
+		int playerTeam = PVPGameMode.Instance().GetPlayerTeam(health.OwnerClientId);
+		_DecrPlayerNbForTeam(playerTeam);
+	}
+
+	private void _IncrPlayerbNbForTeam(int iTeamIdx)
+	{
+		int nbTeamPlayerInZone = m_PlayersInZone.GetValueOrDefault(iTeamIdx, 0);
+		m_PlayersInZone[iTeamIdx] = nbTeamPlayerInZone + 1;
+
+		_UpdateTeam();
+	}
+
+	private void _DecrPlayerNbForTeam(int iTeamIdx)
+	{
+		int nbTeamPlayerInZone = m_PlayersInZone.GetValueOrDefault(iTeamIdx, 0);
 
 		if(nbTeamPlayerInZone <= 1)
-			m_PlayersInZone.Remove(playerTeam);
+			m_PlayersInZone.Remove(iTeamIdx);
 		else
-			m_PlayersInZone[playerTeam] = nbTeamPlayerInZone + 1;
+			m_PlayersInZone[iTeamIdx] = nbTeamPlayerInZone + 1;
 
 		_UpdateTeam();
 	}
@@ -91,6 +118,23 @@ public class ZoneBehaviour : NetworkBehaviour
 			m_CurTeam.Value = m_PlayersInZone.Keys.GetEnumerator().Current;
 		else
 			m_CurTeam.Value = -1;
+	}
+
+	private void _RemoveDeadPlayers()
+	{
+		m_PlayerHealthComponentsInZone.RemoveWhere(health =>
+			{
+				if(health.GetHealth() > 0)
+					return false;
+
+				health.OnDeath.RemoveListener(_RemoveDeadPlayers);
+
+				int playerTeam = PVPGameMode.Instance().GetPlayerTeam(health.OwnerClientId);
+				_DecrPlayerNbForTeam(playerTeam);
+
+				return true;
+			}
+		);
 	}
 
 	private void _TryTakeControl(int iPrevValue, int iCurVal)
