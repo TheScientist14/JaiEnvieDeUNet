@@ -321,6 +321,7 @@ public class PlayerBehaviour : NetworkBehaviour
     {
 		if (IsDead && other.TryGetComponent(out PlayerBehaviour playerBehaviour))
 		{
+			Debug.Log("OnTrigerEnter");
 			StopCoroutine(LeaveReviveBox());
 			StartCoroutine(Revive());
 		}
@@ -330,6 +331,7 @@ public class PlayerBehaviour : NetworkBehaviour
     {
         if (IsDead && other.TryGetComponent(out PlayerBehaviour playerBehaviour))
         {
+			Debug.Log("OnTrigerExit");
             StopCoroutine(Revive());
             StartCoroutine(LeaveReviveBox());
         }
@@ -339,6 +341,7 @@ public class PlayerBehaviour : NetworkBehaviour
 	{
 		while (reviveTimeLeft < timeToRevive)
 		{
+			Debug.Log("ReviveTimeLeft: " + reviveTimeLeft);
 			reviveTimeLeft += Time.deltaTime;
 			yield return null;
 		}
@@ -353,6 +356,7 @@ public class PlayerBehaviour : NetworkBehaviour
 	{
 		while(reviveTimeLeft > 0.0f) 
 		{
+			Debug.Log("ReviveTimeLeft down: " + reviveTimeLeft);
 			reviveTimeLeft -= Time.deltaTime * penaltyMultiplierOutsideReviveBox;
 			yield return null;
 		}
