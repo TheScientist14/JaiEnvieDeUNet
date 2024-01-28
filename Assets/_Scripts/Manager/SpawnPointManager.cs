@@ -34,6 +34,8 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
 
     private void SingletonOnOnClientConnectedCallback(ulong obj)
     {
+     
+        Debug.Log("Client conected : spawning");
         SpawnPointBehaviour spawnPoint = CreateSpawnPointAndAddToList();
 
         ClientRpcParams clientRpcParams = new ClientRpcParams
@@ -50,6 +52,7 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
     [ClientRpc]
     private void MovePlayerClientRpc(Vector3 position, ClientRpcParams clientRpcParams = default)
     {
+        Debug.Log("Spawned at : " + position.ToString());
         NetworkManager.Singleton.ConnectedClients[clientRpcParams.Send.TargetClientIds[0]].PlayerObject.gameObject.transform.position = position;
     }
     
