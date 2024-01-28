@@ -20,9 +20,11 @@ public class CommonGameMode : NetworkSingleton<CommonGameMode>
 		if(AllPlayersConnected == null)
 			AllPlayersConnected = new UnityEvent();
 
+		m_PlayerNames = new NetworkList<FixedString32Bytes>();
+		m_PlayerIds = new NetworkList<ulong>();
+
 		m_NbConnectedPlayers.OnValueChanged += CheckForAllPlayersConnected;
 		AllPlayersConnected.AddListener(OnAllPlayersConnected);
-
 	}
 
 	private void CheckForAllPlayersConnected(int iPrevVal, int iCurVal)
@@ -40,8 +42,9 @@ public class CommonGameMode : NetworkSingleton<CommonGameMode>
 			m_PlayerCount.Value = NetworkManager.Singleton.ConnectedClientsIds.Count;
 
 			m_NbConnectedPlayers.Value = 0;
-			foreach(ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
-				_OnPlayerConnected(clientId);
+			// no need ? It seems to be called for every players that is already connected
+			/*foreach(ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
+				_OnPlayerConnected(clientId);*/
 
 			NetworkManager.Singleton.OnClientConnectedCallback += _OnPlayerConnected;
 		}

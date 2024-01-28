@@ -24,7 +24,7 @@ static class ShuffleExtension
 public class PVPGameMode : CommonGameMode
 {
 	protected NetworkList<ulong> m_ShuffledPlayerIds;
-	protected NetworkVariable<int> m_NbTeam;
+	protected NetworkVariable<int> m_NbTeam = new NetworkVariable<int>();
 
 	protected List<List<ulong>> m_Teams = new List<List<ulong>>();
 	protected Dictionary<ulong, int> m_PlayerToTeam = new Dictionary<ulong, int>();
@@ -42,6 +42,8 @@ public class PVPGameMode : CommonGameMode
 
 		if(OnVictory == null)
 			OnVictory = new UnityEvent<int>();
+
+		m_ShuffledPlayerIds = new NetworkList<ulong>();
 	}
 
 	public override void OnNetworkSpawn()

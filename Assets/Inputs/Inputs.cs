@@ -98,6 +98,15 @@ public partial class @Inputs: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""ShowScore"",
+                    ""type"": ""Value"",
+                    ""id"": ""546d71d1-ed3b-4d6c-8401-55cd8c6c4b89"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -232,6 +241,17 @@ public partial class @Inputs: IInputActionCollection2, IDisposable
                     ""action"": ""SwitchWeapon"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""de3e9760-f967-444a-ac5e-2ea21e17f210"",
+                    ""path"": ""<Keyboard>/tab"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard"",
+                    ""action"": ""ShowScore"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -260,6 +280,7 @@ public partial class @Inputs: IInputActionCollection2, IDisposable
         m_Player_Zoom = m_Player.FindAction("Zoom", throwIfNotFound: true);
         m_Player_Reload = m_Player.FindAction("Reload", throwIfNotFound: true);
         m_Player_SwitchWeapon = m_Player.FindAction("SwitchWeapon", throwIfNotFound: true);
+        m_Player_ShowScore = m_Player.FindAction("ShowScore", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -329,6 +350,7 @@ public partial class @Inputs: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Zoom;
     private readonly InputAction m_Player_Reload;
     private readonly InputAction m_Player_SwitchWeapon;
+    private readonly InputAction m_Player_ShowScore;
     public struct PlayerActions
     {
         private @Inputs m_Wrapper;
@@ -341,6 +363,7 @@ public partial class @Inputs: IInputActionCollection2, IDisposable
         public InputAction @Zoom => m_Wrapper.m_Player_Zoom;
         public InputAction @Reload => m_Wrapper.m_Player_Reload;
         public InputAction @SwitchWeapon => m_Wrapper.m_Player_SwitchWeapon;
+        public InputAction @ShowScore => m_Wrapper.m_Player_ShowScore;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -374,6 +397,9 @@ public partial class @Inputs: IInputActionCollection2, IDisposable
             @SwitchWeapon.started += instance.OnSwitchWeapon;
             @SwitchWeapon.performed += instance.OnSwitchWeapon;
             @SwitchWeapon.canceled += instance.OnSwitchWeapon;
+            @ShowScore.started += instance.OnShowScore;
+            @ShowScore.performed += instance.OnShowScore;
+            @ShowScore.canceled += instance.OnShowScore;
         }
 
         private void UnregisterCallbacks(IPlayerActions instance)
@@ -402,6 +428,9 @@ public partial class @Inputs: IInputActionCollection2, IDisposable
             @SwitchWeapon.started -= instance.OnSwitchWeapon;
             @SwitchWeapon.performed -= instance.OnSwitchWeapon;
             @SwitchWeapon.canceled -= instance.OnSwitchWeapon;
+            @ShowScore.started -= instance.OnShowScore;
+            @ShowScore.performed -= instance.OnShowScore;
+            @ShowScore.canceled -= instance.OnShowScore;
         }
 
         public void RemoveCallbacks(IPlayerActions instance)
@@ -438,5 +467,6 @@ public partial class @Inputs: IInputActionCollection2, IDisposable
         void OnZoom(InputAction.CallbackContext context);
         void OnReload(InputAction.CallbackContext context);
         void OnSwitchWeapon(InputAction.CallbackContext context);
+        void OnShowScore(InputAction.CallbackContext context);
     }
 }

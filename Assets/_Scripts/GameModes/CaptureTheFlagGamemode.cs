@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class CaptureTheFlagGamemode : PVPGameMode
 {
@@ -12,6 +13,13 @@ public class CaptureTheFlagGamemode : PVPGameMode
 	public new static CaptureTheFlagGamemode Instance()
 	{
 		return instance as CaptureTheFlagGamemode;
+	}
+
+	public override void Awake()
+	{
+		base.Awake();
+
+		m_TeamPoints = new NetworkList<int>();
 	}
 
 	public override void OnNetworkSpawn()
@@ -30,6 +38,9 @@ public class CaptureTheFlagGamemode : PVPGameMode
 
 	public int GetTeamPoints(int iTeamIdx)
 	{
+		if(iTeamIdx >= m_TeamPoints.Count || iTeamIdx < 0)
+			return 0;
+
 		return m_TeamPoints[iTeamIdx];
 	}
 

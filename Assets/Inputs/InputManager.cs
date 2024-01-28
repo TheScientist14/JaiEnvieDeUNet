@@ -10,10 +10,16 @@ public class InputManager : Singleton<InputManager>
 	private bool _isHoldingShoot = false;
 	private bool _isHoldingAimDownSight = false;
 
-    public bool IsHoldingShoot { get => _isHoldingShoot; set => _isHoldingShoot = value; }
-    public bool IsHoldingAimDownSight { get => _isHoldingAimDownSight; set => _isHoldingAimDownSight = value; }
+	public bool IsHoldingShoot
+	{
+		get => _isHoldingShoot; set => _isHoldingShoot = value;
+	}
+	public bool IsHoldingAimDownSight
+	{
+		get => _isHoldingAimDownSight; set => _isHoldingAimDownSight = value;
+	}
 
-    protected override void Awake()
+	protected override void Awake()
 	{
 		base.Awake();
 
@@ -21,30 +27,30 @@ public class InputManager : Singleton<InputManager>
 		Cursor.visible = false;
 	}
 
-    private void Start()
-    {
+	private void Start()
+	{
 		_inputs.Player.Fire.performed += (InputAction) =>
 		{
 			_isHoldingShoot = true;
 		};
 
-        _inputs.Player.Fire.canceled += (InputAction) =>
-        {
-            _isHoldingShoot = false;
-        };
+		_inputs.Player.Fire.canceled += (InputAction) =>
+		{
+			_isHoldingShoot = false;
+		};
 
-        _inputs.Player.Zoom.performed += (InputAction) =>
+		_inputs.Player.Zoom.performed += (InputAction) =>
 		{
 			_isHoldingAimDownSight = true;
 		};
 
-        _inputs.Player.Zoom.canceled += (InputAction) =>
-        {
-            _isHoldingAimDownSight = false;
-        };
-    }
+		_inputs.Player.Zoom.canceled += (InputAction) =>
+		{
+			_isHoldingAimDownSight = false;
+		};
+	}
 
-    private void OnEnable()
+	private void OnEnable()
 	{
 		_inputs.Enable();
 	}
@@ -102,5 +108,15 @@ public class InputManager : Singleton<InputManager>
 	public float PlayerSwitchWeapon()
 	{
 		return _inputs.Player.SwitchWeapon.ReadValue<float>();
+	}
+
+	public bool PlayerShowScore()
+	{
+		return _inputs.Player.ShowScore.ReadValue<bool>();
+	}
+
+	public bool PlayerHideScore()
+	{
+		return !_inputs.Player.ShowScore.ReadValue<bool>();
 	}
 }
