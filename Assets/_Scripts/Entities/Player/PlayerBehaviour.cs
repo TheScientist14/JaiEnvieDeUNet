@@ -14,13 +14,13 @@ public class PlayerBehaviour : NetworkBehaviour
 	[SerializeField] private Vector2 camSens = new(100, 100);
 	[SerializeField] private float playerSpeed = 2.0f;
 	[SerializeField] private float jumpHeight = 1.0f;
-    [SerializeField] private float airControl = 0;
+	[SerializeField] private float airControl = 0;
 	[SerializeField] private float timeToRevive = 5.0f;
 	private float reviveTimeLeft = 0.0f;
 	[SerializeField] private float penaltyMultiplierOutsideReviveBox = 0.5f;
 	[SerializeField] BoxCollider reviveBoxCollider;
 
-    [Header("Weapons")]
+	[Header("Weapons")]
 	[SerializeField] private List<WeaponController> weapons = new List<WeaponController>();
 	[SerializeField] private Transform weaponSocket;
 	[SerializeField] private Transform aimingWeaponSocket;
@@ -41,11 +41,11 @@ public class PlayerBehaviour : NetworkBehaviour
 	private Collider _ground = null;
 
 	private HealthComponent _health;
-    private NetworkVariable<bool> _isDead = new NetworkVariable<bool>();
+	private NetworkVariable<bool> _isDead = new NetworkVariable<bool>();
 
-    public NetworkVariable<bool> IsDead { get => _isDead; set => _isDead = value; }
+	public NetworkVariable<bool> IsDead { get => _isDead; set => _isDead = value; }
 
-    private void Start()
+	private void Start()
 	{
 		_health = GetComponent<HealthComponent>();
 
@@ -60,28 +60,28 @@ public class PlayerBehaviour : NetworkBehaviour
 
 		DefaultFoV = _virtualCamera.m_Lens.FieldOfView;
 		defaultWeaponPosition = weaponSocket.localPosition;
-		if(!IsOwner && !IsServer)
+		if (!IsOwner && !IsServer)
 		{
 			_camTransform.gameObject.SetActive(false);
 			_virtualCamera.gameObject.SetActive(false);
 			canvas.gameObject.SetActive(false);
-			
+
 			Destroy(this);
 			return;
-			
+
 		}
-        UnlockCamera();
+		UnlockCamera();
 
-        //InitWeaponsServerRPC();
+		//InitWeaponsServerRPC();
 
-        foreach (var weaponController in weaponSlots)
+		foreach (var weaponController in weaponSlots)
 		{
 			weaponController.Owner = gameObject;
 			weaponController.ShowWeapon(false);
 		}
-		
+
 		weaponSlots[activeWeaponIndex].ShowWeapon(true);
-		
+
 		Debug.Log("PLayerBehaviour Done Start ");
 		//SwitchWeapon(true);
 	}
@@ -89,7 +89,7 @@ public class PlayerBehaviour : NetworkBehaviour
 	[ServerRpc(RequireOwnership = true)]
 	private void InitWeaponsServerRPC()
 	{
-		foreach(var weapon in weapons) 
+		foreach (var weapon in weapons)
 		{
 			AddWeapon(weapon);
 		}
@@ -97,11 +97,11 @@ public class PlayerBehaviour : NetworkBehaviour
 
 	private void Update()
 	{
-        if (_isDead.Value)
-        {
-            return;
-        }
-		if(IsGrounded() && _inputManager.PlayerJumped())
+		if (_isDead.Value)
+		{
+			return;
+		}
+		if (IsGrounded() && _inputManager.PlayerJumped())
 			_hasJumped = true;
 
 		//Shooting
@@ -129,7 +129,7 @@ public class PlayerBehaviour : NetworkBehaviour
 		if (!isAiming && !activeWeapon.IsCharging)
 		{
 			float switchWeaponInput = Mathf.Clamp(_inputManager.PlayerSwitchWeapon(), -1.0f, 1.0f);
-			if (switchWeaponInput != 0.0f) 
+			if (switchWeaponInput != 0.0f)
 			{
 				SwitchWeapon(switchWeaponInput < 0.0f);
 			}
@@ -146,26 +146,26 @@ public class PlayerBehaviour : NetworkBehaviour
 		forward.y = 0;
 		Vector3 move = forward.normalized * _inputManager.GetPlayerMovement().y + _camTransform.right * _inputManager.GetPlayerMovement().x;
 
-		if(!IsGrounded())
+		if (!IsGrounded())
 			move *= airControl;
 
 		_rb.AddForce(move * playerSpeed, ForceMode.Acceleration);
 
-		if(_hasJumped)
+		if (_hasJumped)
 		{
 			_hasJumped = false;
 			_rb.AddForce(Vector3.up * jumpHeight, ForceMode.Acceleration);
 		}
 	}
 
-    private void LateUpdate()
-    {
-        UpdateWeaponAiming();
+	private void LateUpdate()
+	{
+		UpdateWeaponAiming();
 
 		weaponSocket.localPosition = weaponMainLocalPosition;
-    }
+	}
 
-    private bool AddWeapon(WeaponController weaponPrefab)
+	private bool AddWeapon(WeaponController weaponPrefab)
 	{
 		if (HasWeapon(weaponPrefab) != null)
 		{
@@ -180,27 +180,27 @@ public class PlayerBehaviour : NetworkBehaviour
 				return true;
 			}
 		}
-        if (weaponSlots[activeWeaponIndex] == null)
-        {
-            SwitchWeapon(true);
-        }
+		if (weaponSlots[activeWeaponIndex] == null)
+		{
+			SwitchWeapon(true);
+		}
 
-        return false;
-    }
-    
+		return false;
+	}
+
 	private void AddWeaponSpawn(WeaponController weaponPrefab, int i)
 	{
-        WeaponController weaponInstance = Instantiate(weaponPrefab, weaponSocket);
-        weaponInstance.transform.localPosition = Vector3.zero;
-        weaponInstance.transform.localRotation = Quaternion.identity;
+		WeaponController weaponInstance = Instantiate(weaponPrefab, weaponSocket);
+		weaponInstance.transform.localPosition = Vector3.zero;
+		weaponInstance.transform.localRotation = Quaternion.identity;
 
-        weaponInstance.Owner = gameObject;
-        weaponInstance.SourcePrefab = weaponPrefab.gameObject;
-        weaponInstance.ShowWeapon(false);
-        weaponInstance.GetComponent<NetworkObject>().Spawn();
+		weaponInstance.Owner = gameObject;
+		weaponInstance.SourcePrefab = weaponPrefab.gameObject;
+		weaponInstance.ShowWeapon(false);
+		weaponInstance.GetComponent<NetworkObject>().Spawn();
 
-        weaponSlots[i] = weaponInstance;
-    }
+		weaponSlots[i] = weaponInstance;
+	}
 
 	private WeaponController HasWeapon(WeaponController weaponPrefab)
 	{
@@ -227,7 +227,7 @@ public class PlayerBehaviour : NetworkBehaviour
 				int distanceToActiveIndex = 0;
 				if (ascendingOrder)
 				{
-                    distanceToActiveIndex = i - activeWeaponIndex;
+					distanceToActiveIndex = i - activeWeaponIndex;
 				}
 				else
 				{
@@ -262,15 +262,15 @@ public class PlayerBehaviour : NetworkBehaviour
 	private void UpdateWeaponAiming()
 	{
 		WeaponController activeWeapon = weaponSlots[activeWeaponIndex];
-        if (isAiming && activeWeapon)
-        {
+		if (isAiming && activeWeapon)
+		{
 			weaponMainLocalPosition = Vector3.Lerp(
 				weaponMainLocalPosition,
 				aimingWeaponSocket.localPosition + activeWeapon.AimOffset,
 				aimingAnimationSpeed * Time.deltaTime);
 
 			_virtualCamera.m_Lens.FieldOfView = Mathf.Lerp(
-				_virtualCamera.m_Lens.FieldOfView, 
+				_virtualCamera.m_Lens.FieldOfView,
 				activeWeapon.AimZoomRatio * DefaultFoV,
 				aimingAnimationSpeed * Time.deltaTime);
 		}
@@ -285,7 +285,7 @@ public class PlayerBehaviour : NetworkBehaviour
 				DefaultFoV,
 				aimingAnimationSpeed * Time.deltaTime);
 		}
-    }
+	}
 
 	private bool IsGrounded()
 	{
@@ -294,13 +294,13 @@ public class PlayerBehaviour : NetworkBehaviour
 
 	private void OnCollisionEnter(Collision iCollision)
 	{
-		if(Vector3.Dot(iCollision.GetContact(0).normal, Vector3.up) > 0.8f)
+		if (Vector3.Dot(iCollision.GetContact(0).normal, Vector3.up) > 0.8f)
 			_ground = iCollision.collider;
 	}
 
 	private void OnCollisionExit(Collision iCollision)
 	{
-		if(iCollision.collider == _ground)
+		if (iCollision.collider == _ground)
 			_ground = null;
 	}
 
@@ -311,39 +311,43 @@ public class PlayerBehaviour : NetworkBehaviour
 
 	private void OnDie()
 	{
-		ModifyDeathValueServerRPC(true);
-        LockCamera();
+		if (IsServer)
+		{
+			ModifyDeathValue(true);
+		}
+
+		LockCamera();
 		reviveBoxCollider.enabled = true;
 		transform.Rotate(transform.right, 90.0f);
-    }
+	}
 
-	[ServerRpc]
-	private void ModifyDeathValueServerRPC(bool newBool)
+	private void ModifyDeathValue(bool newBool)
 	{
+		Debug.Log("Modify isDead value");
 		_isDead.Value = newBool;
 	}
 
-    private void OnTriggerEnter(Collider other)
-    {
-		if (IsDead.Value && other.TryGetComponent(out PlayerBehaviour playerBehaviour))
+	private void OnTriggerEnter(Collider other)
+	{
+		if (IsDead.Value && other.TryGetComponent(out PlayerBehaviour playerBehaviour) && IsServer)
 		{
 			Debug.Log("OnTriggerEnter");
 			StopCoroutine(LeaveReviveBox());
 			StartCoroutine(Revive());
 		}
-    }
+	}
 
-    private void OnTriggerExit(Collider other)
-    {
-        if (IsDead.Value && other.TryGetComponent(out PlayerBehaviour playerBehaviour))
-        {
+	private void OnTriggerExit(Collider other)
+	{
+		if (IsDead.Value && other.TryGetComponent(out PlayerBehaviour playerBehaviour) && IsServer)
+		{
 			Debug.Log("OnTriggerExit");
-            StopCoroutine(Revive());
-            StartCoroutine(LeaveReviveBox());
-        }
-    }
+			StopCoroutine(Revive());
+			StartCoroutine(LeaveReviveBox());
+		}
+	}
 
-    private IEnumerator Revive()
+	private IEnumerator Revive()
 	{
 		while (reviveTimeLeft < timeToRevive)
 		{
@@ -351,13 +355,29 @@ public class PlayerBehaviour : NetworkBehaviour
 			reviveTimeLeft += Time.deltaTime;
 			yield return null;
 		}
-		ModifyDeathValueServerRPC(false);
-        transform.rotation = Quaternion.identity;
-        reviveBoxCollider.enabled = false;
-		_health.Heal(_health.MaxHealth);
-        UnlockCamera();
-		
+		ModifyDeathValue(false);
+
+        ClientRpcParams clientRpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new ulong[] { OwnerClientId }
+            }
+        };
+
+        _health.Heal(_health.MaxHealth);
+		reviveBoxCollider.enabled = false;
+		ReviveClientRPC(clientRpcParams);
+		UnlockCamera();
 	}
+
+	[ClientRpc]
+	private void ReviveClientRPC(ClientRpcParams clientRPCParams = default)
+	{
+		NetworkManager.Singleton.LocalClient.PlayerObject.gameObject.transform.rotation = Quaternion.identity;
+        reviveBoxCollider.enabled = false;
+        UnlockCamera();
+    }
 
 	private IEnumerator LeaveReviveBox()
 	{
