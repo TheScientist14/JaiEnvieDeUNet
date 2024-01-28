@@ -103,7 +103,7 @@ public class SpawnPointManager : NetworkSingleton<SpawnPointManager>
     /// </summary>
     /// <param name="playerID"></param>
     
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     public void MovePlayerToSpawnPointServerRPC(ulong playerID)
     {
         
